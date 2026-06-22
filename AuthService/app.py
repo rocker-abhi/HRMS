@@ -2,6 +2,7 @@ from fastapi import FastAPI
 import uvicorn
 from dotenv import load_dotenv
 load_dotenv()
+
 # pyrefly: ignore [missing-import]
 from src.extensions.configurations import settings
 # pyrefly: ignore [missing-import]
@@ -17,6 +18,10 @@ from src.middlewares.request_middleware import RequestContextMiddleware
 
 # pyrefly: ignore [missing-import]
 from src.extensions.exception_handler_extensions import app_exception_handler, generic_exception_handler, ApplicationException
+
+# pyrefly: ignore [missing-import]
+from src.extensions.jwt_extension import setup_jwt_manager
+
 import logging
 
 setup_logging()
@@ -29,6 +34,14 @@ async def lifespan(app: FastAPI):
     db.init_db(settings.DATABASE_URL)
     db.check_database_connection()
     logger.info("Database connection established")
+
+    setup_jwt_manager(
+        settings.JWT_SECREAT_KEY,
+        settings.JWT_ALGORITHM,
+        settings.JWT_ACCESS_TOKEN_EXPIRE_TIME,
+        settings.JWT_REFRESH_TOKEN_EXPIRE_TIME
+    )
+    logger.info("JWT manager setup")
     
     yield
     #shutdown
@@ -51,6 +64,7 @@ def init_app():
     return app
 
 app =  init_app()
+
 
 # ------------------------------------------------------------------
 # Health Endpoints

@@ -29,10 +29,7 @@ def jwt_required(func):
         request = kwargs.get("request")
         if request and hasattr(request, "headers") and hasattr(request, "state"):
             return request
-        raise ValueError(
-            f"Function {func.__name__} must receive a 'request: Request' parameter "
-            "to use the @jwt_required decorator."
-        )
+        raise ApplicationException(error=ERRORS["JWT_TOKEN_008"])
 
     def validate_token(request: Request) -> Dict[str, Any]:
         auth_header = request.headers.get("Authorization")

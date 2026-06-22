@@ -47,5 +47,19 @@ ERRORS = {
         "status_code": 401,
         "error_code": "JWT_TOKEN_007",
         "message": "Invalid refresh token.",
+    },
+
+    # Missing Request Parameter
+    "JWT_TOKEN_008": {
+        "status_code": 500,
+        "error_code": "JWT_TOKEN_008",
+        "message": "Function must receive a 'request: Request' parameter to use the decorator.",
+    },
+
+    # Permission Denied
+    "JWT_TOKEN_009": {
+        "status_code": 403,
+        "error_code": "JWT_TOKEN_009",
+        "message": "Access denied. Missing required permissions.",
     }
 }

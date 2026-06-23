@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  redis:
+    build:
+      context: ./Redis-Server
+      dockerfile: Dockerfile
+    container_name: hrms-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - hrms_redis_data:/data
+    restart: always
+
+  auth-service:
+    build:
+      context: ./AuthService
+      dockerfile: Dockerfile
+    container_name: hrms-auth-service
+    network_mode: "host"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=127.0.0.1
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_PASSWORD=admin@123
+      - DATABASE_URL=postgresql+psycopg2://abhishek:admin%40123@127.0.0.1:5432/hrms_db
+      - SECRET_KEY=my-secret-key
+      - DEBUG=True
+      - JWT_SECREAT_KEY=hashMyPassword
+      - JWT_ALGORITHM=HS256
+      - JWT_ACCESS_TOKEN_EXPIRE_TIME=300
+      - JWT_REFRESH_TOKEN_EXPIRE_TIME=604800
+    restart: always
+
+  nginx-server:
+    build:
+      context: ./Nginx-Server
+      dockerfile: Dockerfile
+    container_name: hrms-nginx-server
+    network_mode: "host"
+    depends_on:
+      - auth-service
+    restart: always
+
+volumes:
+  hrms_redis_data:
+    driver: local

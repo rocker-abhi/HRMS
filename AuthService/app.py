@@ -22,6 +22,9 @@ from src.extensions.exception_handler_extensions import app_exception_handler, g
 # pyrefly: ignore [missing-import]
 from src.extensions.jwt_extension import setup_jwt_manager
 
+# pyrefly: ignore [missing-import]
+from src.extensions.redis_extension import RedisManager
+
 import logging
 
 setup_logging()
@@ -42,7 +45,15 @@ async def lifespan(app: FastAPI):
         settings.JWT_REFRESH_TOKEN_EXPIRE_TIME
     )
     logger.info("JWT manager setup")
-    
+
+    await RedisManager.init_app(
+        settings.REDIS_HOST,
+        settings.REDIS_PORT,
+        settings.REDIS_DB,
+        settings.REDIS_PASSWORD
+    )
+    logger.info("Redis manager setup")
+
     yield
     #shutdown
     logger.info("Shutting down application .")

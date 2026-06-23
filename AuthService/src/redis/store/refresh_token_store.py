@@ -6,11 +6,14 @@ class RefreshTokenStore(RedisInterface):
     def __init__(self, redis_client):
         self.redis_client = redis_client
     
-    def set(self, key:str, value:str):
-        self.redis_client.set(f'refresh:{key}', value, ex=self.REFRESH_TOKEN_TTL)
+    async def set(self, key:str, value:str) -> None:
+        await self.redis_client.set(f'refresh:{key}', value, ex=self.REFRESH_TOKEN_TTL)
     
-    def get(self, key:str):
-        return self.redis_client.get(f'refresh:{key}')
+    async def get(self, key:str) -> str | None:
+        val = await self.redis_client.get(f'refresh:{key}')
+        if val is not None and isinstance(val, bytes):
+            return val.decode("utf-8")
+        return val
     
-    def delete(self, key:str):
-        self.redis_client.delete(f'refresh:{key}')
+    async def delete(self, key:str) -> None:
+        await self.redis_client.delete(f'refresh:{key}')

@@ -1,15 +1,16 @@
 from abc import ABC, abstractmethod
+from typing import Any
 
 class RedisInterface(ABC) : 
     
     @abstractmethod
-    def set(self, key, value):
+    async def set(self, key: str, value: Any) -> None:
         pass
     
     @abstractmethod
-    def get(self, key):
+    async def get(self, key: str) -> Any:
         pass
     
     @abstractmethod
-    def delete(self, key):
+    async def delete(self, key: str) -> None:
         pass

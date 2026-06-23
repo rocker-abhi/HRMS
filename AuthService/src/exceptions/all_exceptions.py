@@ -61,5 +61,23 @@ ERRORS = {
         "status_code": 403,
         "error_code": "JWT_TOKEN_009",
         "message": "Access denied. Missing required permissions.",
+    },
+
+    "DB_ERROR_001":{
+        "status_code":500,
+        "error_code":"DB_ERROR_001",
+        "message":"Database operation failed.",
+    },
+
+    "AUTH_ERROR_001": {
+        "status_code": 401,
+        "error_code": "AUTH_ERROR_001",
+        "message": "Invalid username or password.",
+    },
+
+    "AUTH_ERROR_002": {
+        "status_code": 403,
+        "error_code": "AUTH_ERROR_002",
+        "message": "User account is inactive.",
     }
 }

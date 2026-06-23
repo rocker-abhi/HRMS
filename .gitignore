@@ -158,3 +158,10 @@ cython_debug/
 
 # Service setup copy
 service setup copy/
+
+# Frontend / Node modules
+node_modules/
+**/node_modules/
+**/dist/
+.eslintcache
+.local

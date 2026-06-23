@@ -42,6 +42,17 @@ services:
     network_mode: "host"
     depends_on:
       - auth-service
+      - frontend
+    restart: always
+
+  frontend:
+    build:
+      context: ./library-management-system-frontend
+      dockerfile: Dockerfile
+    container_name: hrms-frontend
+    network_mode: "host"
+    depends_on:
+      - auth-service
     restart: always
 
 volumes:

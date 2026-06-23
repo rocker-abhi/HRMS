@@ -1,6 +1,8 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import logging
+from fastapi.exceptions import ValidationException
+from typing import cast
 
 logger = logging.getLogger(__name__)
 
@@ -59,3 +61,42 @@ async def generic_exception_handler(
                 "status_code":500
             }
         )
+
+async def validator_exception_handler(
+    request:Request,
+    exc:Exception
+):
+    request_id = getattr(request.state, "request_id", None)
+    logger.warning(
+        "[%s] [%s] %s",
+        request_id,
+        "validation_error",
+        "Validation Error"
+    )
+    validation_errors = []
+
+    val_exc = cast(ValidationException, exc)
+    for error in val_exc.errors():
+
+        validation_errors.append(
+            {
+                "field": error["loc"][-1],
+                "message": error["msg"]
+            }
+        )
+
+    logger.warning(
+        "[%s] Validation Error",
+        request_id
+    )
+
+    return JSONResponse(
+        status_code=422,
+        content={
+            "success": False,
+            "error_code": "VALIDATION_001",
+            "message": "Validation failed.",
+            "status_code": 422,
+            "errors": validation_errors
+        }
+    )

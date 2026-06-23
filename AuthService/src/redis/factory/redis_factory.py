@@ -1,9 +1,8 @@
 
 # pyrefly: ignore [missing-import]
-from .src.redis.enum.redis_store_enums import RedisStoreEnums
-
+from src.redis.enum.redis_store_enums import RedisStoreEnums
 # pyrefly: ignore [missing-import]
-from .src.redis.store.refresh_token_store import RefreshTokenStore
+from src.redis.store.refresh_token_store import RefreshTokenStore
 
 class RedisFactory:
     

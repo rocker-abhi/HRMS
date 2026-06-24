@@ -22,3 +22,11 @@ class UserRepository:
         except Exception as e:
             logger.error(f"Error getting user by username: {e}")
             raise ApplicationException(ERRORS["DB_ERROR_001"])
+
+    def get_user_by_id(self, user_id):
+        try:
+            user = self.db.query(UserModel).filter(UserModel.id == user_id).first()
+            return user
+        except Exception as e:
+            logger.error(f"Error getting user by id: {e}")
+            raise ApplicationException(ERRORS["DB_ERROR_001"])

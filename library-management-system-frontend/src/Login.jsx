@@ -15,18 +15,72 @@ export default function Login() {
     setLoading(true);
     setError('');
 
+    // Client-side validations
+    const usernameTrimmed = username.trim();
+    if (usernameTrimmed.length < 3 || usernameTrimmed.length > 50) {
+      setError('Username must be between 3 and 50 characters long.');
+      setLoading(false);
+      return;
+    }
+    if (!/^[a-zA-Z0-9._-]+$/.test(usernameTrimmed)) {
+      setError('Username may only contain letters, numbers, dots, underscores, and hyphens.');
+      setLoading(false);
+      return;
+    }
+
+    if (password.trim() !== password) {
+      setError('Password cannot start or end with spaces.');
+      setLoading(false);
+      return;
+    }
+    if (password.length < 8 || password.length > 128) {
+      setError('Password must be between 8 and 128 characters long.');
+      setLoading(false);
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setError('Password must contain at least one uppercase letter.');
+      setLoading(false);
+      return;
+    }
+    if (!/[a-z]/.test(password)) {
+      setError('Password must contain at least one lowercase letter.');
+      setLoading(false);
+      return;
+    }
+    if (!/\d/.test(password)) {
+      setError('Password must contain at least one number.');
+      setLoading(false);
+      return;
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(password)) {
+      setError('Password must contain at least one special character.');
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username: usernameTrimmed.toLowerCase(), password }),
       });
 
       const data = await response.json();
 
-      if (!response.ok || !data.success) {
+      if (!response.ok) {
+        if (data.errors && data.errors.length > 0) {
+          const validationMsg = data.errors
+            .map((err) => `${err.field.charAt(0).toUpperCase() + err.field.slice(1)}: ${err.message}`)
+            .join(' | ');
+          throw new Error(validationMsg);
+        }
+        throw new Error(data.message || 'Invalid username or password');
+      }
+
+      if (!data.success) {
         throw new Error(data.message || 'Invalid username or password');
       }
 
@@ -36,6 +90,7 @@ export default function Login() {
       localStorage.setItem('user_id', data.data.user_id);
       localStorage.setItem('role', data.data.role);
       localStorage.setItem('permissions', JSON.stringify(data.data.permissions));
+      localStorage.setItem('token_type', data.data.token_type || 'Bearer');
 
       // Redirect to dashboard
       navigate('/dashboard');

@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 # pyrefly: ignore [missing-import]
+from src.extensions.configurations import settings
+# pyrefly: ignore [missing-import]
 from src.repository.database_repository import UserRepository
 # pyrefly: ignore [missing-import]
 from src.utils.password_hasher import verify_password
@@ -34,7 +36,7 @@ class AuthService:
             raise ApplicationException(ERRORS["AUTH_ERROR_001"])
             
         try:
-            verify_password(user.password_hash, password)
+            verify_password(user.password_hash, f"{password}{settings.SECRET_KEY}")
         except Exception:
             raise ApplicationException(ERRORS["AUTH_ERROR_001"])
             
@@ -85,5 +87,22 @@ class AuthService:
                 "role": role_name,
                 "permissions": permissions,
                 "token_type": "Bearer"
+            }
+        }
+
+    async def authenticate_me(self,user_id:int):
+        user_repo = UserRepository(self.db)
+        user = user_repo.get_user_by_id(user_id)
+        if not user:
+            raise ApplicationException(ERRORS["AUTH_ERROR_001"])
+        role_name = user.role.name if user.role else ""
+        permissions = [p.name for p in user.role.permissions] if user.role else []
+        return {
+            "success": True,
+            "message": "Authentication successful.",
+            "data": {
+                "user_id": str(user.id),
+                "role": role_name,
+                "permissions":permissions,
             }
         }

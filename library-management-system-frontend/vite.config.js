@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      '/auth': 'http://localhost'
+      '/auth': process.env.BACKEND_URL || 'http://localhost'
     }
   }
 })

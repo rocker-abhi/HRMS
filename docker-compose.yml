@@ -17,15 +17,18 @@ services:
       context: ./AuthService
       dockerfile: Dockerfile
     container_name: hrms-auth-service
-    network_mode: "host"
+    ports:
+      - "8000:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - redis
     environment:
-      - REDIS_HOST=127.0.0.1
+      - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_DB=0
       - REDIS_PASSWORD=admin@123
-      - DATABASE_URL=postgresql+psycopg2://abhishek:admin%40123@127.0.0.1:5432/hrms_db
+      - DATABASE_URL=postgresql+psycopg2://abhishek:admin%40123@host.docker.internal:5432/hrms_db
       - SECRET_KEY=my-secret-key
       - DEBUG=True
       - JWT_SECREAT_KEY=hashMyPassword
@@ -39,7 +42,8 @@ services:
       context: ./Nginx-Server
       dockerfile: Dockerfile
     container_name: hrms-nginx-server
-    network_mode: "host"
+    ports:
+      - "80:80"
     depends_on:
       - auth-service
       - frontend
@@ -50,7 +54,10 @@ services:
       context: ./library-management-system-frontend
       dockerfile: Dockerfile
     container_name: hrms-frontend
-    network_mode: "host"
+    ports:
+      - "5173:5173"
+    environment:
+      - BACKEND_URL=http://auth-service:8000
     depends_on:
       - auth-service
     restart: always

@@ -29,7 +29,7 @@ from fastapi.exceptions import ValidationException
 # pyrefly: ignore [missing-import]
 from src.extensions.exception_handler_extensions import validator_exception_handler
 # pyrefly: ignore [missing-import]
-from src.route.auth_route import auth_route
+from src.route import auth_route, user_router
 
 import logging
 
@@ -79,6 +79,7 @@ def init_app():
     app.add_exception_handler(Exception, generic_exception_handler)
     app.add_exception_handler(ValidationException, validator_exception_handler)
     app.include_router(auth_route)
+    app.include_router(user_router)
 
     return app
 

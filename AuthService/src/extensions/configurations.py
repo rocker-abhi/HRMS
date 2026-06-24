@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     REDIS_PORT: int
     REDIS_DB: int
     REDIS_PASSWORD: str
+    MINIMUM_LOGGIN_LEVEL: str = "INFO"
 
     class Config:
         env_file = ".env"

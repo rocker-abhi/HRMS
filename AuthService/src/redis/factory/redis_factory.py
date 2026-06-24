@@ -3,6 +3,8 @@
 from src.redis.enum.redis_store_enums import RedisStoreEnums
 # pyrefly: ignore [missing-import]
 from src.redis.store.refresh_token_store import RefreshTokenStore
+# pyrefly: ignore [missing-import]
+from src.redis.store.otp_store import OTPStore
 
 class RedisFactory:
     
@@ -12,7 +14,8 @@ class RedisFactory:
             raise ValueError("Redis client is required")
 
         store = {
-            RedisStoreEnums.REFRESH_TOKEN: RefreshTokenStore
+            RedisStoreEnums.REFRESH_TOKEN: RefreshTokenStore,
+            RedisStoreEnums.OTP: OTPStore
         }
         
         redis_store = store.get(store_type)

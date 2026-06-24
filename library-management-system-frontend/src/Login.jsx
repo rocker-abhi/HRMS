@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Lock, User, AlertCircle, Loader } from 'lucide-react';
+import { Eye, EyeOff, Lock, User, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -15,10 +15,9 @@ export default function Login() {
     setLoading(true);
     setError('');
 
-    // Client-side validations
     const usernameTrimmed = username.trim();
     if (usernameTrimmed.length < 3 || usernameTrimmed.length > 50) {
-      setError('Username must be between 3 and 50 characters long.');
+      setError('Username must be between 3 and 50 characters.');
       setLoading(false);
       return;
     }
@@ -27,34 +26,13 @@ export default function Login() {
       setLoading(false);
       return;
     }
-
     if (password.trim() !== password) {
       setError('Password cannot start or end with spaces.');
       setLoading(false);
       return;
     }
     if (password.length < 8 || password.length > 128) {
-      setError('Password must be between 8 and 128 characters long.');
-      setLoading(false);
-      return;
-    }
-    if (!/[A-Z]/.test(password)) {
-      setError('Password must contain at least one uppercase letter.');
-      setLoading(false);
-      return;
-    }
-    if (!/[a-z]/.test(password)) {
-      setError('Password must contain at least one lowercase letter.');
-      setLoading(false);
-      return;
-    }
-    if (!/\d/.test(password)) {
-      setError('Password must contain at least one number.');
-      setLoading(false);
-      return;
-    }
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(password)) {
-      setError('Password must contain at least one special character.');
+      setError('Password must be between 8 and 128 characters.');
       setLoading(false);
       return;
     }
@@ -62,37 +40,36 @@ export default function Login() {
     try {
       const response = await fetch('/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: usernameTrimmed.toLowerCase(), password }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 403 && data.error_code === 'AUTH_ERROR_003') {
+          navigate('/reset-password', { state: { username: usernameTrimmed, tempPassword: password } });
+          return;
+        }
         if (data.errors && data.errors.length > 0) {
           const validationMsg = data.errors
             .map((err) => `${err.field.charAt(0).toUpperCase() + err.field.slice(1)}: ${err.message}`)
             .join(' | ');
           throw new Error(validationMsg);
         }
-        throw new Error(data.message || 'Invalid username or password');
+        throw new Error(data.message || 'Invalid username or password.');
       }
 
-      if (!data.success) {
-        throw new Error(data.message || 'Invalid username or password');
-      }
+      if (!data.success) throw new Error(data.message || 'Login failed.');
 
-      // Store token and user details in localStorage
       localStorage.setItem('access_token', data.data.access_token);
       localStorage.setItem('refresh_token', data.data.refresh_token);
       localStorage.setItem('user_id', data.data.user_id);
+      localStorage.setItem('username', usernameTrimmed.toLowerCase());
       localStorage.setItem('role', data.data.role);
       localStorage.setItem('permissions', JSON.stringify(data.data.permissions));
       localStorage.setItem('token_type', data.data.token_type || 'Bearer');
 
-      // Redirect to dashboard
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
@@ -102,97 +79,173 @@ export default function Login() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-[#090b11] overflow-hidden font-sans">
-      {/* Decorative background blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-900/20 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-violet-800/20 blur-[120px] pointer-events-none" />
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, #EEF2FF 0%, #F0F4FF 40%, #E8EDFF 100%)',
+      padding: '1.5rem',
+      fontFamily: 'var(--font-sans)',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      {/* Decorative blobs */}
+      <div style={{
+        position: 'absolute', top: '-15%', left: '-10%',
+        width: '45%', height: '55%', borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)',
+        filter: 'blur(40px)', pointerEvents: 'none',
+      }} />
+      <div style={{
+        position: 'absolute', bottom: '-15%', right: '-10%',
+        width: '45%', height: '55%', borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(79,70,229,0.1) 0%, transparent 70%)',
+        filter: 'blur(40px)', pointerEvents: 'none',
+      }} />
 
-      {/* Main glass card */}
-      <div className="w-full max-w-md p-8 mx-4 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl relative z-10">
-        
-        {/* Logo and Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 shadow-lg shadow-purple-500/30 mb-4">
-            <span className="text-2xl font-bold text-white tracking-wider">HR</span>
+      {/* Card */}
+      <div style={{
+        width: '100%', maxWidth: '420px',
+        background: '#FFFFFF',
+        borderRadius: '24px',
+        boxShadow: '0 20px 60px rgba(79,70,229,0.14), 0 4px 16px rgba(0,0,0,0.06)',
+        padding: '2.5rem',
+        position: 'relative', zIndex: 1,
+        border: '1px solid rgba(79,70,229,0.08)',
+      }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: '64px', height: '64px', borderRadius: '18px',
+            background: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)',
+            boxShadow: '0 8px 24px rgba(79,70,229,0.35)',
+            marginBottom: '1.25rem',
+          }}>
+            <span style={{ fontSize: '1.375rem', fontWeight: 800, color: '#fff', letterSpacing: '0.05em' }}>HR</span>
           </div>
-          <h2 className="text-3xl font-bold text-white tracking-tight">Welcome Back</h2>
-          <p className="text-sm text-gray-400 mt-2">Access the H.R.M.S portal securely</p>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#1E1B4B', margin: 0, letterSpacing: '-0.02em' }}>Welcome Back</h1>
+          <p style={{ color: '#6B7280', marginTop: '0.5rem', fontSize: '0.9rem' }}>Sign in to the HRMS portal</p>
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-6 p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-red-200 text-sm flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 shrink-0 text-red-400" />
-            <span>{error}</span>
+          <div style={{
+            display: 'flex', alignItems: 'flex-start', gap: '0.625rem',
+            padding: '0.875rem 1rem', borderRadius: '12px',
+            background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.15)',
+            marginBottom: '1.5rem',
+          }}>
+            <AlertCircle size={17} color="#DC2626" style={{ flexShrink: 0, marginTop: '1px' }} />
+            <span style={{ color: '#991B1B', fontSize: '0.85rem', lineHeight: 1.5 }}>{error}</span>
           </div>
         )}
 
-        {/* Login Form */}
-        <form onSubmit={handleLogin} className="space-y-6">
-          {/* Username Input */}
+        {/* Form */}
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
+          {/* Username */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#4B5563', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Username
             </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                <User className="w-5 h-5" />
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF', display: 'flex' }}>
+                <User size={16} />
               </span>
               <input
+                id="login-username"
                 type="text"
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter username"
-                className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 outline-none transition-all duration-300 focus:border-purple-500 focus:bg-white/10 focus:ring-1 focus:ring-purple-500"
+                placeholder="e.g. john.doe"
+                style={{
+                  width: '100%', paddingLeft: '2.5rem', paddingRight: '1rem',
+                  paddingTop: '0.75rem', paddingBottom: '0.75rem',
+                  border: '1.5px solid #E4E9F7', borderRadius: '12px',
+                  background: '#F8FAFF', color: '#1E1B4B',
+                  fontSize: '0.9rem', outline: 'none', transition: 'all 0.18s',
+                  fontFamily: 'var(--font-sans)',
+                }}
+                onFocus={e => { e.target.style.borderColor = '#4F46E5'; e.target.style.background = '#fff'; e.target.style.boxShadow = '0 0 0 3px rgba(79,70,229,0.1)'; }}
+                onBlur={e => { e.target.style.borderColor = '#E4E9F7'; e.target.style.background = '#F8FAFF'; e.target.style.boxShadow = 'none'; }}
               />
             </div>
           </div>
 
-          {/* Password Input */}
+          {/* Password */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#4B5563', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Password
             </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                <Lock className="w-5 h-5" />
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF', display: 'flex' }}>
+                <Lock size={16} />
               </span>
               <input
-                type={showPassword ? "text" : "password"}
+                id="login-password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
-                className="w-full pl-11 pr-12 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 outline-none transition-all duration-300 focus:border-purple-500 focus:bg-white/10 focus:ring-1 focus:ring-purple-500"
+                placeholder="Enter your password"
+                style={{
+                  width: '100%', paddingLeft: '2.5rem', paddingRight: '3rem',
+                  paddingTop: '0.75rem', paddingBottom: '0.75rem',
+                  border: '1.5px solid #E4E9F7', borderRadius: '12px',
+                  background: '#F8FAFF', color: '#1E1B4B',
+                  fontSize: '0.9rem', outline: 'none', transition: 'all 0.18s',
+                  fontFamily: 'var(--font-sans)',
+                }}
+                onFocus={e => { e.target.style.borderColor = '#4F46E5'; e.target.style.background = '#fff'; e.target.style.boxShadow = '0 0 0 3px rgba(79,70,229,0.1)'; }}
+                onBlur={e => { e.target.style.borderColor = '#E4E9F7'; e.target.style.background = '#F8FAFF'; e.target.style.boxShadow = 'none'; }}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-white transition-colors duration-200"
+                style={{
+                  position: 'absolute', right: '0.875rem', top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF',
+                  display: 'flex', padding: 0, transition: 'color 0.18s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.color = '#4F46E5'}
+                onMouseLeave={e => e.currentTarget.style.color = '#9CA3AF'}
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
 
-          {/* Submit Button */}
+          {/* Submit */}
           <button
+            id="login-submit"
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:from-purple-700 active:to-indigo-700 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:scale-[1.01]"
+            style={{
+              marginTop: '0.5rem',
+              width: '100%', padding: '0.875rem',
+              background: loading ? '#A5B4FC' : 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)',
+              color: '#fff', border: 'none', borderRadius: '12px',
+              fontSize: '0.95rem', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+              boxShadow: loading ? 'none' : '0 4px 14px rgba(79,70,229,0.4)',
+              transition: 'all 0.18s', fontFamily: 'var(--font-sans)',
+              transform: 'translateY(0)',
+            }}
+            onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(79,70,229,0.5)'; }}}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = loading ? 'none' : '0 4px 14px rgba(79,70,229,0.4)'; }}
           >
-            {loading ? (
-              <>
-                <Loader className="w-5 h-5 animate-spin" />
-                <span>Signing In...</span>
-              </>
-            ) : (
-              <span>Sign In</span>
-            )}
+            {loading ? <><Loader2 size={17} style={{ animation: 'spin 1s linear infinite' }} /><span>Signing In...</span></> : <span>Sign In</span>}
           </button>
         </form>
+
+        <p style={{ textAlign: 'center', color: '#9CA3AF', fontSize: '0.78rem', marginTop: '1.5rem' }}>
+          Human Resources Management System · v2.0
+        </p>
       </div>
+
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

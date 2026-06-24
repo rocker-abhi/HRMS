@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 # pyrefly: ignore [missing-import]
-from src.validators.login_validator import (LoginRequest, LoginResponse, LoginData)
+from src.validators.login_validator import (LoginRequest, LoginResponse, LoginData, ResetPasswordRequest, ResetPasswordResponse)
 # pyrefly: ignore [missing-import]
 from src.validators.auth_me_validator import AuthMeResponse
 # pyrefly: ignore [missing-import]
@@ -31,5 +31,16 @@ async def authenticate_me(request: Request, db: Session = Depends(get_db)):
     user_id = request.state.user.get("user_id")
     auth_service = AuthService(db)
     result = await auth_service.authenticate_me(user_id)
+    return result
+
+
+@auth_route.post("/reset-password", response_model=ResetPasswordResponse)
+async def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
+    auth_service = AuthService(db)
+    result = await auth_service.reset_password(
+        username=payload.username,
+        old_password=payload.old_password,
+        new_password=payload.new_password
+    )
     return result
 

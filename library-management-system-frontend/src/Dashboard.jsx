@@ -1,159 +1,268 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, BookOpen, ShieldAlert, Award, FileText, Settings } from 'lucide-react';
+import {
+  LogOut, Users, BookOpen, ShieldAlert, Award, FileText,
+  Settings, LayoutDashboard, ChevronRight,
+} from 'lucide-react';
 import UserManagement from './UserManagement.jsx';
+
+const SIDEBAR_NAV = [
+  { id: 'dashboard', label: 'Dashboard',  Icon: LayoutDashboard },
+  { id: 'employees', label: 'Employees',  Icon: Users },
+  { id: 'library',   label: 'Library',    Icon: BookOpen },
+  { id: 'reports',   label: 'Reports',    Icon: FileText },
+  { id: 'settings',  label: 'Settings',   Icon: Settings },
+];
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const role = localStorage.getItem('role') || 'User';
-  const username = localStorage.getItem('user_id') || 'Abhishek';
+  const role     = localStorage.getItem('role')     || 'User';
+  const username = localStorage.getItem('username') || localStorage.getItem('user_id') || 'User';
   const [activeTab, setActiveTab] = React.useState('dashboard');
+  const [sidebarHover, setSidebarHover] = React.useState(null);
 
   const handleLogout = () => {
     localStorage.clear();
     navigate('/login');
   };
 
-  return (
-    <div className="min-h-screen flex bg-[#0c0e17] text-gray-200 font-sans">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-white/5 bg-[#090b11] p-6 flex flex-col justify-between shrink-0">
-        <div>
-          {/* Logo */}
-          <div className="flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-500 shadow-md shadow-purple-500/20 flex items-center justify-center">
-              <span className="font-bold text-white tracking-wider">HR</span>
-            </div>
-            <span className="text-xl font-semibold text-white tracking-wide">H.R.M.S</span>
-          </div>
+  const initials = username.substring(0, 2).toUpperCase();
 
-          {/* Navigation Links */}
-          <nav className="space-y-2">
-            <button 
-              onClick={() => setActiveTab('dashboard')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${activeTab === 'dashboard' ? 'bg-white/5 text-white' : 'hover:bg-white/5 hover:text-white text-gray-400'}`}
-            >
-              <Award className={`w-5 h-5 ${activeTab === 'dashboard' ? 'text-purple-400' : ''}`} />
-              <span>Dashboard</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('employees')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${activeTab === 'employees' ? 'bg-white/5 text-white' : 'hover:bg-white/5 hover:text-white text-gray-400'}`}
-            >
-              <Users className={`w-5 h-5 ${activeTab === 'employees' ? 'text-purple-400' : ''}`} />
-              <span>Employees</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('library')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${activeTab === 'library' ? 'bg-white/5 text-white' : 'hover:bg-white/5 hover:text-white text-gray-400'}`}
-            >
-              <BookOpen className={`w-5 h-5 ${activeTab === 'library' ? 'text-purple-400' : ''}`} />
-              <span>Library</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('reports')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${activeTab === 'reports' ? 'bg-white/5 text-white' : 'hover:bg-white/5 hover:text-white text-gray-400'}`}
-            >
-              <FileText className={`w-5 h-5 ${activeTab === 'reports' ? 'text-purple-400' : ''}`} />
-              <span>Reports</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('settings')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${activeTab === 'settings' ? 'bg-white/5 text-white' : 'hover:bg-white/5 hover:text-white text-gray-400'}`}
-            >
-              <Settings className={`w-5 h-5 ${activeTab === 'settings' ? 'text-purple-400' : ''}`} />
-              <span>Settings</span>
-            </button>
-          </nav>
+  return (
+    <div style={{
+      display: 'flex', minHeight: '100vh',
+      background: '#F0F4FF', fontFamily: 'var(--font-sans)',
+    }}>
+      {/* ── Sidebar ─────────────────────────────────────────────────────── */}
+      <aside style={{
+        width: '240px', flexShrink: 0,
+        background: '#FFFFFF',
+        borderRight: '1.5px solid #E4E9F7',
+        display: 'flex', flexDirection: 'column',
+        padding: '1.5rem 1rem',
+        boxShadow: '2px 0 12px rgba(79,70,229,0.04)',
+      }}>
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.25rem 0.5rem', marginBottom: '2rem' }}>
+          <div style={{
+            width: '38px', height: '38px', borderRadius: '10px', flexShrink: 0,
+            background: 'linear-gradient(135deg, #4F46E5, #6366F1)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 10px rgba(79,70,229,0.3)',
+          }}>
+            <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.8rem', letterSpacing: '0.05em' }}>HR</span>
+          </div>
+          <div>
+            <div style={{ fontWeight: 700, color: '#1E1B4B', fontSize: '0.95rem', letterSpacing: '-0.01em' }}>H.R.M.S</div>
+            <div style={{ fontSize: '0.7rem', color: '#9CA3AF', fontWeight: 500 }}>Management Portal</div>
+          </div>
         </div>
 
-        {/* Logout Action */}
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 w-full border border-red-500/10 hover:border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-300 rounded-xl font-medium transition-all duration-300 justify-center cursor-pointer"
-        >
-          <LogOut className="w-5 h-5" />
-          <span>Sign Out</span>
-        </button>
+        {/* Nav */}
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}>
+          <p style={{ fontSize: '0.68rem', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '0 0.75rem', marginBottom: '0.5rem' }}>
+            Navigation
+          </p>
+          {SIDEBAR_NAV.map(({ id, label, Icon }) => {
+            const isActive = activeTab === id;
+            return (
+              <button key={id} onClick={() => setActiveTab(id)}
+                onMouseEnter={() => setSidebarHover(id)}
+                onMouseLeave={() => setSidebarHover(null)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.75rem',
+                  padding: '0.625rem 0.875rem', borderRadius: '10px', border: 'none',
+                  background: isActive ? 'rgba(79,70,229,0.08)' : (sidebarHover === id ? '#F8FAFF' : 'transparent'),
+                  color: isActive ? '#4F46E5' : '#4B5563',
+                  fontWeight: isActive ? 600 : 500, fontSize: '0.875rem',
+                  cursor: 'pointer', width: '100%', textAlign: 'left',
+                  transition: 'all 0.15s', fontFamily: 'var(--font-sans)',
+                  borderLeft: isActive ? '3px solid #4F46E5' : '3px solid transparent',
+                }}>
+                <Icon size={17} strokeWidth={isActive ? 2.2 : 1.8} />
+                <span style={{ flex: 1 }}>{label}</span>
+                {isActive && <ChevronRight size={14} style={{ opacity: 0.5 }} />}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* User Card + Logout */}
+        <div>
+          <div style={{
+            padding: '0.875rem', borderRadius: '12px',
+            background: '#F8FAFF', border: '1.5px solid #E4E9F7',
+            display: 'flex', alignItems: 'center', gap: '0.75rem',
+            marginBottom: '0.75rem',
+          }}>
+            <div style={{
+              width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0,
+              background: 'linear-gradient(135deg, #4F46E5, #818CF8)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', fontWeight: 700, fontSize: '0.8rem',
+            }}>
+              {initials}
+            </div>
+            <div style={{ overflow: 'hidden' }}>
+              <div style={{ fontWeight: 600, color: '#1E1B4B', fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{username}</div>
+              <div style={{ fontSize: '0.7rem', color: '#6366F1', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{role}</div>
+            </div>
+          </div>
+          <button onClick={handleLogout}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+              width: '100%', padding: '0.625rem', borderRadius: '10px', border: '1.5px solid #FEE2E2',
+              background: '#FFF5F5', color: '#DC2626', fontWeight: 600, fontSize: '0.85rem',
+              cursor: 'pointer', transition: 'all 0.18s', fontFamily: 'var(--font-sans)',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#FEE2E2'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#FFF5F5'; }}>
+            <LogOut size={15} />
+            Sign Out
+          </button>
+        </div>
       </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 p-8 overflow-y-auto">
+      {/* ── Main Content ─────────────────────────────────────────────────── */}
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflowY: 'auto' }}>
         {/* Top Header */}
-        <header className="flex items-center justify-between pb-6 border-b border-white/5 mb-8">
+        <header style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '1.25rem 2rem', background: '#FFFFFF',
+          borderBottom: '1.5px solid #E4E9F7',
+          boxShadow: '0 1px 4px rgba(79,70,229,0.04)',
+          position: 'sticky', top: 0, zIndex: 10,
+        }}>
           <div>
-            <h1 className="text-3xl font-semibold text-white tracking-tight">Main Dashboard</h1>
-            <p className="text-gray-400 text-sm mt-1">Review system metrics, statistics, and records</p>
+            <h1 style={{ margin: 0, fontSize: '1.375rem', fontWeight: 700, color: '#1E1B4B', letterSpacing: '-0.02em' }}>
+              {SIDEBAR_NAV.find(n => n.id === activeTab)?.label || 'Dashboard'}
+            </h1>
+            <p style={{ margin: 0, fontSize: '0.8rem', color: '#9CA3AF', marginTop: '0.2rem' }}>
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
           </div>
-          <div className="flex items-center gap-4 bg-white/5 border border-white/5 px-5 py-3 rounded-xl">
-            <div className="text-right">
-              <div className="font-semibold text-white text-sm">{username}</div>
-              <div className="text-xs text-purple-400 font-medium tracking-wider uppercase mt-0.5">{role}</div>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center font-bold text-white">
-              {username.substring(0, 2).toUpperCase()}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{
+              padding: '0.5rem 1rem', borderRadius: '10px',
+              background: '#F0F4FF', border: '1.5px solid #E4E9F7',
+              display: 'flex', alignItems: 'center', gap: '0.5rem',
+            }}>
+              <div style={{
+                width: '30px', height: '30px', borderRadius: '50%',
+                background: 'linear-gradient(135deg, #4F46E5, #818CF8)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: '#fff', fontWeight: 700, fontSize: '0.72rem',
+              }}>{initials}</div>
+              <div>
+                <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1E1B4B' }}>{username}</div>
+                <div style={{ fontSize: '0.68rem', color: '#6366F1', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{role}</div>
+              </div>
             </div>
           </div>
         </header>
 
-        {/* Dynamic Content Section */}
-        {activeTab === 'dashboard' && (
-          <>
-            {/* Statistics Cards Grid */}
-            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <div className="p-6 rounded-2xl bg-white/5 border border-white/5 shadow-xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform duration-300" />
-                <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-4 text-purple-400">
-                  <Users className="w-6 h-6" />
-                </div>
-                <div className="text-2xl font-bold text-white">124</div>
-                <div className="text-sm text-gray-400 mt-1">Total Employees</div>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-white/5 border border-white/5 shadow-xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform duration-300" />
-                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-4 text-indigo-400">
-                  <BookOpen className="w-6 h-6" />
-                </div>
-                <div className="text-2xl font-bold text-white">4,812</div>
-                <div className="text-sm text-gray-400 mt-1">Library Catalog</div>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-white/5 border border-white/5 shadow-xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform duration-300" />
-                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4 text-emerald-400">
-                  <Award className="w-6 h-6" />
-                </div>
-                <div className="text-2xl font-bold text-white">98.4%</div>
-                <div className="text-sm text-gray-400 mt-1">System Uptime</div>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-white/5 border border-white/5 shadow-xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform duration-300" />
-                <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-4 text-rose-400">
-                  <ShieldAlert className="w-6 h-6" />
-                </div>
-                <div className="text-2xl font-bold text-white">0</div>
-                <div className="text-sm text-gray-400 mt-1">Critical Warnings</div>
-              </div>
-            </section>
-
-            {/* Content Section Placeholder */}
-            <section className="p-8 rounded-2xl bg-white/5 border border-white/5 shadow-2xl relative overflow-hidden">
-              <div className="absolute top-[-20%] right-[-20%] w-[60%] h-[60%] rounded-full bg-purple-900/10 blur-[100px] pointer-events-none" />
-              <h2 className="text-xl font-semibold text-white tracking-tight mb-4">Welcome to HRMS System</h2>
-              <p className="text-gray-400 leading-relaxed text-sm max-w-2xl">
-                You are currently authenticated and logged in as <span className="text-purple-400 font-semibold">{username}</span> with a role of <span className="text-indigo-400 font-semibold">{role}</span>. All administrative operations, reports, configurations, and employee catalogs are available through the left side navigation options.
-              </p>
-            </section>
-          </>
-        )}
-
-        {activeTab === 'employees' && (
-          <UserManagement />
-        )}
-
+        {/* Page Body */}
+        <div style={{ padding: '2rem', flex: 1 }}>
+          {activeTab === 'dashboard' && <DashboardHome username={username} role={role} />}
+          {activeTab === 'employees' && <UserManagement />}
+          {activeTab === 'library'   && <PlaceholderPage title="Library" desc="Book catalog and borrowing management." />}
+          {activeTab === 'reports'   && <PlaceholderPage title="Reports" desc="Analytics and system reports." />}
+          {activeTab === 'settings'  && <PlaceholderPage title="Settings" desc="System and account configuration." />}
+        </div>
       </main>
     </div>
   );
+}
+
+/* ─── Dashboard Home ─────────────────────────────────────────────────────────── */
+function StatCard({ label, value, Icon, color, bg }) {
+  return (
+    <div style={{
+      background: '#FFFFFF', borderRadius: '16px', padding: '1.5rem',
+      border: '1.5px solid #E4E9F7',
+      boxShadow: '0 2px 8px rgba(79,70,229,0.06)',
+      display: 'flex', alignItems: 'flex-start', gap: '1rem',
+      transition: 'all 0.2s',
+    }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 24px rgba(79,70,229,0.12)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(79,70,229,0.06)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+    >
+      <div style={{
+        width: '48px', height: '48px', borderRadius: '12px', flexShrink: 0,
+        background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Icon size={22} color={color} strokeWidth={1.8} />
+      </div>
+      <div>
+        <div style={{ fontSize: '1.625rem', fontWeight: 800, color: '#1E1B4B', lineHeight: 1 }}>{value}</div>
+        <div style={{ fontSize: '0.82rem', color: '#6B7280', marginTop: '0.375rem', fontWeight: 500 }}>{label}</div>
+      </div>
+    </div>
+  );
+}
+
+function DashboardHome({ username, role }) {
+  return (
+    <div>
+      {/* Welcome Banner */}
+      <div style={{
+        background: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 50%, #818CF8 100%)',
+        borderRadius: '20px', padding: '2rem 2.5rem',
+        marginBottom: '1.75rem', position: 'relative', overflow: 'hidden',
+        boxShadow: '0 8px 30px rgba(79,70,229,0.3)',
+      }}>
+        <div style={{ position: 'absolute', top: '-30%', right: '-5%', width: '280px', height: '280px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: '-40%', right: '15%', width: '200px', height: '200px', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
+        <h2 style={{ margin: 0, color: '#fff', fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
+          Good {getTimeGreeting()}, {username}! 👋
+        </h2>
+        <p style={{ margin: '0.5rem 0 0', color: 'rgba(255,255,255,0.75)', fontSize: '0.9rem' }}>
+          You're logged in as <strong style={{ color: '#fff' }}>{role}</strong>. Here's what's happening today.
+        </p>
+      </div>
+
+      {/* Stats Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '1.75rem' }}>
+        <StatCard label="Total Employees" value="124" Icon={Users} color="#4F46E5" bg="rgba(79,70,229,0.08)" />
+        <StatCard label="Library Catalog" value="4,812" Icon={BookOpen} color="#0891B2" bg="rgba(8,145,178,0.08)" />
+        <StatCard label="System Uptime" value="98.4%" Icon={Award} color="#059669" bg="rgba(5,150,105,0.08)" />
+        <StatCard label="Critical Alerts" value="0" Icon={ShieldAlert} color="#DC2626" bg="rgba(220,38,38,0.08)" />
+      </div>
+
+      {/* Info panel */}
+      <div style={{
+        background: '#FFFFFF', borderRadius: '16px', padding: '1.75rem 2rem',
+        border: '1.5px solid #E4E9F7', boxShadow: '0 2px 8px rgba(79,70,229,0.04)',
+      }}>
+        <h3 style={{ margin: '0 0 0.75rem', fontSize: '1.05rem', fontWeight: 700, color: '#1E1B4B' }}>System Overview</h3>
+        <p style={{ margin: 0, color: '#6B7280', fontSize: '0.9rem', lineHeight: 1.7 }}>
+          All services are operational. Use the left sidebar to navigate to employee management,
+          library catalog, reports, and settings. Administrative actions are available based on your role.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function PlaceholderPage({ title, desc }) {
+  return (
+    <div style={{
+      background: '#FFFFFF', borderRadius: '16px', padding: '4rem 2rem',
+      border: '1.5px solid #E4E9F7', textAlign: 'center',
+      boxShadow: '0 2px 8px rgba(79,70,229,0.04)',
+    }}>
+      <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'rgba(79,70,229,0.08)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+        <Settings size={26} color="#4F46E5" strokeWidth={1.6} />
+      </div>
+      <h2 style={{ margin: '0 0 0.5rem', color: '#1E1B4B', fontSize: '1.25rem', fontWeight: 700 }}>{title}</h2>
+      <p style={{ margin: 0, color: '#6B7280', fontSize: '0.9rem' }}>{desc} — Coming soon.</p>
+    </div>
+  );
+}
+
+function getTimeGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Morning';
+  if (h < 17) return 'Afternoon';
+  return 'Evening';
 }

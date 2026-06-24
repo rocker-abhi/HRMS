@@ -38,7 +38,7 @@ class UserModel(BaseModel):
 
     is_active: Mapped[bool] = mapped_column(
         nullable=False,
-        default=True
+        default=False
     )
 
     is_password_reset: Mapped[bool] = mapped_column(

@@ -1,83 +1,133 @@
 ERRORS = {
 
-    # Missing Token
+    # ─── JWT / Token Errors ────────────────────────────────────────────────────
+
+    # Missing Authorization header / token
     "JWT_TOKEN_001": {
         "status_code": 401,
         "error_code": "JWT_TOKEN_001",
         "message": "Authorization token is required.",
     },
 
-    # Expired Token
+    # Expired access token
     "JWT_TOKEN_002": {
         "status_code": 401,
         "error_code": "JWT_TOKEN_002",
-        "message": "Token has expired.",
+        "message": "Token has expired. Please login again.",
     },
 
-    # Invalid Token
+    # Malformed / invalid token
     "JWT_TOKEN_003": {
         "status_code": 401,
         "error_code": "JWT_TOKEN_003",
-        "message": "Invalid token.",
+        "message": "Invalid token. Please login again.",
     },
 
-    # Invalid Signature
+    # Invalid signature
     "JWT_TOKEN_004": {
         "status_code": 401,
         "error_code": "JWT_TOKEN_004",
         "message": "Token signature is invalid.",
     },
 
-    # Invalid Token Type
+    # Wrong token type (e.g. refresh sent where access expected)
     "JWT_TOKEN_005": {
         "status_code": 401,
         "error_code": "JWT_TOKEN_005",
         "message": "Invalid token type.",
     },
 
-    # Refresh Token Expired
+    # Refresh token has expired
     "JWT_TOKEN_006": {
         "status_code": 401,
         "error_code": "JWT_TOKEN_006",
-        "message": "Refresh token has expired.",
+        "message": "Refresh token has expired. Please login again.",
     },
 
-    # Refresh Token Invalid
+    # Invalid refresh token
     "JWT_TOKEN_007": {
         "status_code": 401,
         "error_code": "JWT_TOKEN_007",
         "message": "Invalid refresh token.",
     },
 
-    # Missing Request Parameter
+    # Decorator used on function without Request parameter
     "JWT_TOKEN_008": {
         "status_code": 500,
         "error_code": "JWT_TOKEN_008",
-        "message": "Function must receive a 'request: Request' parameter to use the decorator.",
+        "message": "Function must receive a 'request: Request' parameter to use the @jwt_required decorator.",
     },
 
-    # Permission Denied
+    # Caller lacks the required role/permission
     "JWT_TOKEN_009": {
         "status_code": 403,
         "error_code": "JWT_TOKEN_009",
-        "message": "Access denied. Missing required permissions.",
+        "message": "Access denied. You do not have the required permissions for this action.",
     },
 
-    "DB_ERROR_001":{
-        "status_code":500,
-        "error_code":"DB_ERROR_001",
-        "message":"Database operation failed.",
+    # ─── Database Errors ───────────────────────────────────────────────────────
+
+    "DB_ERROR_001": {
+        "status_code": 500,
+        "error_code": "DB_ERROR_001",
+        "message": "A database error occurred. Please try again later.",
     },
 
+    # ─── Authentication Errors ─────────────────────────────────────────────────
+
+    # Invalid username or password (login failure — intentionally vague for security)
     "AUTH_ERROR_001": {
         "status_code": 401,
         "error_code": "AUTH_ERROR_001",
         "message": "Invalid username or password.",
     },
 
+    # Account is deactivated
     "AUTH_ERROR_002": {
         "status_code": 403,
         "error_code": "AUTH_ERROR_002",
-        "message": "User account is inactive.",
-    }
+        "message": "Your account is inactive. Please contact an administrator.",
+    },
+
+    # Account requires a mandatory password reset (first login or admin reset)
+    "AUTH_ERROR_003": {
+        "status_code": 403,
+        "error_code": "AUTH_ERROR_003",
+        "message": "Password reset is required. Please reset your password before logging in.",
+    },
+
+    # Resource (user) not found by ID
+    "AUTH_ERROR_004": {
+        "status_code": 404,
+        "error_code": "AUTH_ERROR_004",
+        "message": "User not found.",
+    },
+
+    # Duplicate username on create/update
+    "AUTH_ERROR_005": {
+        "status_code": 409,
+        "error_code": "AUTH_ERROR_005",
+        "message": "Username is already taken. Please choose a different username.",
+    },
+
+    # Duplicate email on create/update
+    "AUTH_ERROR_006": {
+        "status_code": 409,
+        "error_code": "AUTH_ERROR_006",
+        "message": "An account with this email address already exists.",
+    },
+
+    # Invalid or expired OTP during password reset
+    "AUTH_ERROR_007": {
+        "status_code": 400,
+        "error_code": "AUTH_ERROR_007",
+        "message": "The OTP or temporary password is invalid or has expired.",
+    },
+
+    # Attempt to delete or perform a restricted action on an admin user
+    "AUTH_ERROR_008": {
+        "status_code": 403,
+        "error_code": "AUTH_ERROR_008",
+        "message": "This action cannot be performed on an admin user.",
+    },
 }

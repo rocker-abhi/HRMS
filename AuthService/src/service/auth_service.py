@@ -1,10 +1,11 @@
+from operator import imod
 from sqlalchemy.orm import Session
 # pyrefly: ignore [missing-import]
 from src.extensions.configurations import settings
 # pyrefly: ignore [missing-import]
 from src.repository.database_repository import UserRepository
 # pyrefly: ignore [missing-import]
-from src.utils.password_hasher import verify_password
+from src.utils.password_hasher import verify_password, hash_password
 # pyrefly: ignore [missing-import]
 from src.extensions.jwt_extension import get_jwt_keys
 # pyrefly: ignore [missing-import]
@@ -22,6 +23,8 @@ from src.extensions.exception_handler_extensions import ApplicationException
 # pyrefly: ignore [missing-import]
 from src.exceptions.all_exceptions import ERRORS
 
+import logging
+logger = logging.getLogger(__name__)
 
 class AuthService:
     
@@ -32,16 +35,24 @@ class AuthService:
         user_repo = UserRepository(self.db)
         user = user_repo.get_user_by_username(username)
         
+        logger.debug("user : %s",user)
+
         if not user:
+            logger.debug("user not found ....")
             raise ApplicationException(ERRORS["AUTH_ERROR_001"])
             
         try:
             verify_password(user.password_hash, f"{password}{settings.SECRET_KEY}")
+            logger.debug("Password verified successfully.")
         except Exception:
+            logger.debug("Password verification failed.")
             raise ApplicationException(ERRORS["AUTH_ERROR_001"])
             
         if not user.is_active:
             raise ApplicationException(ERRORS["AUTH_ERROR_002"])
+            
+        if user.is_password_reset:
+            raise ApplicationException(ERRORS["AUTH_ERROR_003"])
             
         # Get JWT configurations
         keys = get_jwt_keys()
@@ -94,7 +105,7 @@ class AuthService:
         user_repo = UserRepository(self.db)
         user = user_repo.get_user_by_id(user_id)
         if not user:
-            raise ApplicationException(ERRORS["AUTH_ERROR_001"])
+            raise ApplicationException(ERRORS["AUTH_ERROR_004"])
         role_name = user.role.name if user.role else ""
         permissions = [p.name for p in user.role.permissions] if user.role else []
         return {
@@ -105,4 +116,29 @@ class AuthService:
                 "role": role_name,
                 "permissions":permissions,
             }
+        }
+
+    async def reset_password(self, username, old_password, new_password):
+        user_repo = UserRepository(self.db)
+        user = user_repo.get_user_by_username(username)
+        if not user:
+            raise ApplicationException(ERRORS["AUTH_ERROR_001"])
+            
+        try:
+            verify_password(user.password_hash, f"{old_password}{settings.SECRET_KEY}")
+        except Exception:
+            raise ApplicationException(ERRORS["AUTH_ERROR_001"])
+            
+        if not user.is_active:
+            raise ApplicationException(ERRORS["AUTH_ERROR_002"])
+            
+        # Hash new password and disable the reset flag
+        hashed_password = hash_password(f"{new_password}{settings.SECRET_KEY}")
+        user.password_hash = hashed_password
+        user.is_password_reset = False
+        self.db.commit()
+        
+        return {
+            "success": True,
+            "message": "Password reset successfully. You can now login with your new password."
         }

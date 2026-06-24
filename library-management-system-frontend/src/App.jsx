@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Login.jsx';
 import Dashboard from './Dashboard.jsx';
+import PasswordResetPage from './PasswordResetPage.jsx';
 
 // Protected Route wrapper
 function ProtectedRoute({ children, isAuthenticated }) {
@@ -71,6 +72,14 @@ export default function App() {
           element={
             <PublicRoute isAuthenticated={isAuthenticated}>
               <Login />
+            </PublicRoute>
+          } 
+        />
+        <Route 
+          path="/reset-password" 
+          element={
+            <PublicRoute isAuthenticated={isAuthenticated}>
+              <PasswordResetPage />
             </PublicRoute>
           } 
         />

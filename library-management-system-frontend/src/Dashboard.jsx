@@ -1,11 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Users, BookOpen, ShieldAlert, Award, FileText, Settings } from 'lucide-react';
+import UserManagement from './UserManagement.jsx';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const role = localStorage.getItem('role') || 'User';
   const username = localStorage.getItem('user_id') || 'Abhishek';
+  const [activeTab, setActiveTab] = React.useState('dashboard');
 
   const handleLogout = () => {
     localStorage.clear();
@@ -27,26 +29,41 @@ export default function Dashboard() {
 
           {/* Navigation Links */}
           <nav className="space-y-2">
-            <a href="#" className="flex items-center gap-3 px-4 py-3 bg-white/5 text-white rounded-xl font-medium transition-all duration-300">
-              <Award className="w-5 h-5 text-purple-400" />
+            <button 
+              onClick={() => setActiveTab('dashboard')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${activeTab === 'dashboard' ? 'bg-white/5 text-white' : 'hover:bg-white/5 hover:text-white text-gray-400'}`}
+            >
+              <Award className={`w-5 h-5 ${activeTab === 'dashboard' ? 'text-purple-400' : ''}`} />
               <span>Dashboard</span>
-            </a>
-            <a href="#" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 hover:text-white rounded-xl font-medium text-gray-400 transition-all duration-300">
-              <Users className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={() => setActiveTab('employees')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${activeTab === 'employees' ? 'bg-white/5 text-white' : 'hover:bg-white/5 hover:text-white text-gray-400'}`}
+            >
+              <Users className={`w-5 h-5 ${activeTab === 'employees' ? 'text-purple-400' : ''}`} />
               <span>Employees</span>
-            </a>
-            <a href="#" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 hover:text-white rounded-xl font-medium text-gray-400 transition-all duration-300">
-              <BookOpen className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={() => setActiveTab('library')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${activeTab === 'library' ? 'bg-white/5 text-white' : 'hover:bg-white/5 hover:text-white text-gray-400'}`}
+            >
+              <BookOpen className={`w-5 h-5 ${activeTab === 'library' ? 'text-purple-400' : ''}`} />
               <span>Library</span>
-            </a>
-            <a href="#" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 hover:text-white rounded-xl font-medium text-gray-400 transition-all duration-300">
-              <FileText className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={() => setActiveTab('reports')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${activeTab === 'reports' ? 'bg-white/5 text-white' : 'hover:bg-white/5 hover:text-white text-gray-400'}`}
+            >
+              <FileText className={`w-5 h-5 ${activeTab === 'reports' ? 'text-purple-400' : ''}`} />
               <span>Reports</span>
-            </a>
-            <a href="#" className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 hover:text-white rounded-xl font-medium text-gray-400 transition-all duration-300">
-              <Settings className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={() => setActiveTab('settings')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${activeTab === 'settings' ? 'bg-white/5 text-white' : 'hover:bg-white/5 hover:text-white text-gray-400'}`}
+            >
+              <Settings className={`w-5 h-5 ${activeTab === 'settings' ? 'text-purple-400' : ''}`} />
               <span>Settings</span>
-            </a>
+            </button>
           </nav>
         </div>
 
@@ -79,53 +96,63 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* Statistics Cards Grid */}
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="p-6 rounded-2xl bg-white/5 border border-white/5 shadow-xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform duration-300" />
-            <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-4 text-purple-400">
-              <Users className="w-6 h-6" />
-            </div>
-            <div className="text-2xl font-bold text-white">124</div>
-            <div className="text-sm text-gray-400 mt-1">Total Employees</div>
-          </div>
+        {/* Dynamic Content Section */}
+        {activeTab === 'dashboard' && (
+          <>
+            {/* Statistics Cards Grid */}
+            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="p-6 rounded-2xl bg-white/5 border border-white/5 shadow-xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform duration-300" />
+                <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-4 text-purple-400">
+                  <Users className="w-6 h-6" />
+                </div>
+                <div className="text-2xl font-bold text-white">124</div>
+                <div className="text-sm text-gray-400 mt-1">Total Employees</div>
+              </div>
 
-          <div className="p-6 rounded-2xl bg-white/5 border border-white/5 shadow-xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform duration-300" />
-            <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-4 text-indigo-400">
-              <BookOpen className="w-6 h-6" />
-            </div>
-            <div className="text-2xl font-bold text-white">4,812</div>
-            <div className="text-sm text-gray-400 mt-1">Library Catalog</div>
-          </div>
+              <div className="p-6 rounded-2xl bg-white/5 border border-white/5 shadow-xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform duration-300" />
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-4 text-indigo-400">
+                  <BookOpen className="w-6 h-6" />
+                </div>
+                <div className="text-2xl font-bold text-white">4,812</div>
+                <div className="text-sm text-gray-400 mt-1">Library Catalog</div>
+              </div>
 
-          <div className="p-6 rounded-2xl bg-white/5 border border-white/5 shadow-xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform duration-300" />
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4 text-emerald-400">
-              <Award className="w-6 h-6" />
-            </div>
-            <div className="text-2xl font-bold text-white">98.4%</div>
-            <div className="text-sm text-gray-400 mt-1">System Uptime</div>
-          </div>
+              <div className="p-6 rounded-2xl bg-white/5 border border-white/5 shadow-xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform duration-300" />
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4 text-emerald-400">
+                  <Award className="w-6 h-6" />
+                </div>
+                <div className="text-2xl font-bold text-white">98.4%</div>
+                <div className="text-sm text-gray-400 mt-1">System Uptime</div>
+              </div>
 
-          <div className="p-6 rounded-2xl bg-white/5 border border-white/5 shadow-xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform duration-300" />
-            <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-4 text-rose-400">
-              <ShieldAlert className="w-6 h-6" />
-            </div>
-            <div className="text-2xl font-bold text-white">0</div>
-            <div className="text-sm text-gray-400 mt-1">Critical Warnings</div>
-          </div>
-        </section>
+              <div className="p-6 rounded-2xl bg-white/5 border border-white/5 shadow-xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform duration-300" />
+                <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-4 text-rose-400">
+                  <ShieldAlert className="w-6 h-6" />
+                </div>
+                <div className="text-2xl font-bold text-white">0</div>
+                <div className="text-sm text-gray-400 mt-1">Critical Warnings</div>
+              </div>
+            </section>
 
-        {/* Content Section Placeholder */}
-        <section className="p-8 rounded-2xl bg-white/5 border border-white/5 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-[-20%] right-[-20%] w-[60%] h-[60%] rounded-full bg-purple-900/10 blur-[100px] pointer-events-none" />
-          <h2 className="text-xl font-semibold text-white tracking-tight mb-4">Welcome to HRMS System</h2>
-          <p className="text-gray-400 leading-relaxed text-sm max-w-2xl">
-            You are currently authenticated and logged in as <span className="text-purple-400 font-semibold">{username}</span> with a role of <span className="text-indigo-400 font-semibold">{role}</span>. All administrative operations, reports, configurations, and employee catalogs are available through the left side navigation options.
-          </p>
-        </section>
+            {/* Content Section Placeholder */}
+            <section className="p-8 rounded-2xl bg-white/5 border border-white/5 shadow-2xl relative overflow-hidden">
+              <div className="absolute top-[-20%] right-[-20%] w-[60%] h-[60%] rounded-full bg-purple-900/10 blur-[100px] pointer-events-none" />
+              <h2 className="text-xl font-semibold text-white tracking-tight mb-4">Welcome to HRMS System</h2>
+              <p className="text-gray-400 leading-relaxed text-sm max-w-2xl">
+                You are currently authenticated and logged in as <span className="text-purple-400 font-semibold">{username}</span> with a role of <span className="text-indigo-400 font-semibold">{role}</span>. All administrative operations, reports, configurations, and employee catalogs are available through the left side navigation options.
+              </p>
+            </section>
+          </>
+        )}
+
+        {activeTab === 'employees' && (
+          <UserManagement />
+        )}
+
       </main>
     </div>
   );

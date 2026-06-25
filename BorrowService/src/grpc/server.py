@@ -12,10 +12,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'generated'))
 
 import auth_grpc_pb2
+# pyrefly: ignore [missing-import]
 import auth_grpc_pb2_grpc
 
+# pyrefly: ignore [missing-import]
 from src.extensions.configurations import settings
+# pyrefly: ignore [missing-import]
 from src.extensions.database_extension import init_db, postgres_database
+# pyrefly: ignore [missing-import]
 from src.repository.database_repository import UserRepository
 
 # Setup logging

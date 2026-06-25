@@ -192,3 +192,19 @@ class BookRepository:
             self.db.rollback()
             logger.error(f"Error deleting book: {e}")
             raise ApplicationException(ERRORS["DB_ERROR_001"])
+
+    def search_books(self, query: str) -> List[BookModel]:
+        try:
+            search_pattern = f"%{query}%"
+            return (
+                self.db.query(BookModel)
+                .filter(
+                    (BookModel.title.ilike(search_pattern)) |
+                    (BookModel.isbn.ilike(search_pattern)) |
+                    (BookModel.description.ilike(search_pattern))
+                )
+                .all()
+            )
+        except Exception as e:
+            logger.error(f"Error searching books: {e}")
+            raise ApplicationException(ERRORS["DB_ERROR_001"])

@@ -37,6 +37,20 @@ async def get_all_books(request: Request, db: Session = Depends(get_db)):
     return await service.get_all_books()
 
 
+# ── GET /books/search — search books ──────────────────────────────────────────
+
+@books_router.get("/search", response_model=BookListResponse)
+@jwt_required
+async def search_books(
+    request: Request,
+    q: str = "",
+    db: Session = Depends(get_db)
+):
+    """Search books by title, description, or ISBN."""
+    service = BookService(db)
+    return await service.search_books(q)
+
+
 # ── GET /books/{book_id} — get single book ────────────────────────────────────
 
 @books_router.get("/{book_id}", response_model=BookSingleResponse)
@@ -100,5 +114,3 @@ async def delete_book(
 
     service = BookService(db)
     return await service.delete_book(book_id)
-
-

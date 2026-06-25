@@ -25,7 +25,7 @@ from src.extensions.jwt_extension import setup_jwt_manager
 # pyrefly: ignore [missing-import]
 from src.extensions.redis_extension import RedisManager
 
-from fastapi.exceptions import ValidationException
+from fastapi.exceptions import ValidationException, RequestValidationError
 # pyrefly: ignore [missing-import]
 from src.extensions.exception_handler_extensions import validator_exception_handler
 # pyrefly: ignore [missing-import]
@@ -78,6 +78,7 @@ def init_app():
     app.add_exception_handler(ApplicationException, app_exception_handler)
     app.add_exception_handler(Exception, generic_exception_handler)
     app.add_exception_handler(ValidationException, validator_exception_handler)
+    app.add_exception_handler(RequestValidationError, validator_exception_handler)
     app.include_router(auth_route)
     app.include_router(user_router)
 

@@ -26,10 +26,7 @@ def permission_required(*permissions: str):
             request = kwargs.get("request")
             if request and hasattr(request, "headers") and hasattr(request, "state"):
                 return request
-            raise ValueError(
-                f"Function {func.__name__} must receive a 'request: Request' parameter "
-                "to use the @permission_required decorator."
-            )
+            raise ApplicationException(error=ERRORS["JWT_TOKEN_008"])
 
         def check_permissions(request: Request):
             user = getattr(request.state, "user", None)
@@ -40,11 +37,7 @@ def permission_required(*permissions: str):
             user_perms = user.get("permissions", [])
             # Check if all required permissions are met
             if not all(p in user_perms for p in permissions):
-                raise ApplicationException(error={
-                    "status_code": 403,
-                    "error_code": "PERMISSION_DENIED",
-                    "message": "Access denied. Missing required permissions."
-                })
+                raise ApplicationException(error=ERRORS["JWT_TOKEN_009"])
 
         if inspect.iscoroutinefunction(func):
             @wraps(func)

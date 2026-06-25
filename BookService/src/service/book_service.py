@@ -180,3 +180,11 @@ class BookService:
             "success": True,
             "message": "Book deleted successfully."
         }
+
+    async def search_books(self, query: str):
+        books = self.repo.search_books(query)
+        return {
+            "success": True,
+            "message": "Books searched successfully.",
+            "data": books
+        }

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Query
 from sqlalchemy.orm import Session
 
 # pyrefly: ignore [missing-import]
@@ -91,3 +91,18 @@ async def update_user(user_id: str, payload: UpdateUserRequest, request: Request
     user_service = UserService(db)
     result = await user_service.update_user(user_id, payload)
     return result
+
+
+@user_router.get("/users/search", response_model=GetUserResponse)
+@jwt_required
+async def search_user(
+    request: Request,
+    q: str = Query(..., min_length=1, description="Search query"),
+    db: Session = Depends(get_db)
+):
+    """Search users by username or email."""
+    user_service = UserService(db)
+    result = await user_service.search_users(q)
+    return result
+
+    

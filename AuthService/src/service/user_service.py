@@ -189,3 +189,10 @@ class UserService:
             "message": "User updated successfully.",
             "data": user
         }
+
+    async def search_users(self, query: str):
+        users = self.repo.search_users(query)
+        return {
+            "success": True,
+            "data": users
+        }

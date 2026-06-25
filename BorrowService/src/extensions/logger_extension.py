@@ -16,8 +16,11 @@ def setup_logging():
     today = datetime.now().strftime("%Y-%m-%d")
     error_log_file = os.path.join(LOG_DIR, f"{today}_error.log")
 
+    level_str = os.getenv("MINIMUM_LOGGIN_LEVEL", "INFO").upper()
+    log_level = getattr(logging, level_str, logging.INFO)
+
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(log_level)
 
     formatter = logging.Formatter(LOG_FORMAT)
 
@@ -29,7 +32,7 @@ def setup_logging():
     # Console handler (ALL logs)
     # -------------------------
     console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(log_level)
     console_handler.setFormatter(formatter)
 
     # -------------------------

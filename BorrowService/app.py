@@ -2,6 +2,7 @@ from fastapi import FastAPI
 import uvicorn
 from dotenv import load_dotenv
 load_dotenv()
+# from src.route import author_router, books_router, category_router
 
 # pyrefly: ignore [missing-import]
 from src.extensions.configurations import settings
@@ -21,6 +22,14 @@ from src.extensions.exception_handler_extensions import app_exception_handler, g
 
 # pyrefly: ignore [missing-import]
 from src.extensions.jwt_extension import setup_jwt_manager
+
+
+
+from fastapi.exceptions import ValidationException
+# pyrefly: ignore [missing-import]
+from src.extensions.exception_handler_extensions import validator_exception_handler
+# pyrefly: ignore [missing-import]
+
 
 import logging
 
@@ -42,7 +51,9 @@ async def lifespan(app: FastAPI):
         settings.JWT_REFRESH_TOKEN_EXPIRE_TIME
     )
     logger.info("JWT manager setup")
-    
+
+
+
     yield
     #shutdown
     logger.info("Shutting down application .")
@@ -57,9 +68,14 @@ def init_app():
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    # app.include_router(author_router)
+    # app.include_router(books_router)
+    # app.include_router(category_router)
     app.add_middleware(RequestContextMiddleware)
     app.add_exception_handler(ApplicationException, app_exception_handler)
     app.add_exception_handler(Exception, generic_exception_handler)
+    app.add_exception_handler(ValidationException, validator_exception_handler)
+    
 
     return app
 
@@ -102,6 +118,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "app:app",
         host="0.0.0.0",
-        port=8000,
+        port=10000,
         reload=True
     )

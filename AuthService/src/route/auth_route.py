@@ -43,4 +43,3 @@ async def reset_password(payload: ResetPasswordRequest, db: Session = Depends(ge
         new_password=payload.new_password
     )
     return result
-

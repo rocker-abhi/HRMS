@@ -70,3 +70,18 @@ class UserRepository:
         except Exception as e:
             logger.error(f"Error getting user by email: {e}")
             raise ApplicationException(ERRORS["DB_ERROR_001"])
+
+    def search_users(self, query: str) -> list[UserModel]:
+        try:
+            search_pattern = f"%{query}%"
+            return (
+                self.db.query(UserModel)
+                .filter(
+                    (UserModel.username.ilike(search_pattern)) |
+                    (UserModel.email.ilike(search_pattern))
+                )
+                .all()
+            )
+        except Exception as e:
+            logger.error(f"Error searching users: {e}")
+            raise ApplicationException(ERRORS["DB_ERROR_001"])

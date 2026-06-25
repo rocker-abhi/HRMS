@@ -80,7 +80,10 @@ const DEFAULT_TRANSACTIONS = [
 export default function BorrowManagement() {
   const [transactions, setTransactions] = useState([]);
   const [books,        setBooks]        = useState([]);
-  const [loadingBooks, setLoadingBooks] = useState(true);
+  const [loadingBooks, setLoadingBooks] = useState(false);
+  const [users,        setUsers]        = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState('');
   const [isModalOpen,  setIsModalOpen]  = useState(false);
   const [editingTx,    setEditingTx]    = useState(null);
   const [formData,     setFormData]     = useState({
@@ -115,12 +118,17 @@ export default function BorrowManagement() {
     }
   }, []);
 
-  /* ── Fetch library books ──────────────────────────────────────────────── */
+  /* ── Search library books ──────────────────────────────────────────────── */
   useEffect(() => {
-    const fetchBooks = async () => {
+    if (!formData.bookTitle.trim() || formData.bookId) {
+      setBooks([]);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
       try {
         setLoadingBooks(true);
-        const res = await fetch('http://localhost:9000/books', {
+        const res = await fetch(`http://localhost:9000/books/search?q=${encodeURIComponent(formData.bookTitle.trim())}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
@@ -128,13 +136,41 @@ export default function BorrowManagement() {
           setBooks(data.data || []);
         }
       } catch (err) {
-        console.error("Failed to fetch books", err);
+        console.error("Failed to search books", err);
       } finally {
         setLoadingBooks(false);
       }
-    };
-    fetchBooks();
-  }, [token]);
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [formData.bookTitle, formData.bookId, token]);
+
+  /* ── Search users ──────────────────────────────────────────────────────── */
+  useEffect(() => {
+    if (!formData.borrowerName.trim() || selectedUserId) {
+      setUsers([]);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        setLoadingUsers(true);
+        const res = await fetch(`http://localhost:8000/users/search?q=${encodeURIComponent(formData.borrowerName.trim())}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setUsers(data.data || []);
+        }
+      } catch (err) {
+        console.error("Failed to search users", err);
+      } finally {
+        setLoadingUsers(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [formData.borrowerName, selectedUserId, token]);
 
   /* ── Sync to localStorage ─────────────────────────────────────────────── */
   const saveTransactions = (newTxList) => {
@@ -145,6 +181,8 @@ export default function BorrowManagement() {
   /* ── Modal helpers ─────────────────────────────────────────────────────── */
   const handleOpenModal = (tx = null) => {
     setFormError('');
+    setSelectedUserId('');
+    setUsers([]);
     const today = new Date().toISOString().split('T')[0];
     const twoWeeks = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
@@ -158,6 +196,8 @@ export default function BorrowManagement() {
         dueDate: tx.dueDate,
         status: tx.status,
       });
+      // Mock selected user ID if active transaction matches a username
+      setSelectedUserId('editing');
     } else {
       setEditingTx(null);
       setFormData({
@@ -175,6 +215,8 @@ export default function BorrowManagement() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingTx(null);
+    setSelectedUserId('');
+    setUsers([]);
   };
 
   /* ── Save (create / update) ────────────────────────────────────────────── */
@@ -545,23 +587,56 @@ export default function BorrowManagement() {
                   <input type="text" disabled value={formData.bookTitle} style={{ ...inputStyle, paddingLeft: '0.875rem', background: '#F1F4FA', color: '#6B7280' }} />
                 ) : (
                   <div style={{ position: 'relative' }}>
-                    <select value={formData.bookId}
+                    <BookOpen size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
+                    <input type="text" required value={formData.bookTitle}
                       onChange={e => {
-                        const selected = books.find(b => b.id === e.target.value);
                         setFormData({
                           ...formData,
-                          bookId: e.target.value,
-                          bookTitle: selected ? selected.title : '',
+                          bookTitle: e.target.value,
+                          bookId: '',
                         });
                       }}
-                      style={{ ...inputStyle, paddingLeft: '0.875rem', paddingRight: '2rem', appearance: 'none', cursor: 'pointer' }}
-                      onFocus={focusInput} onBlur={blurInput}>
-                      <option value="">Select a book to issue...</option>
-                      {books.map(b => (
-                        <option key={b.id} value={b.id} disabled={b.available_copies === 0}>{b.title} {b.available_copies === 0 ? '(Out of stock)' : ''}</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={14} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF', pointerEvents: 'none' }} />
+                      style={{ ...inputStyle, paddingLeft: '2rem' }} onFocus={focusInput} onBlur={blurInput}
+                      placeholder="Enter or search book title..." />
+
+                    {/* Book suggestions list */}
+                    {formData.bookTitle.trim() !== '' && !formData.bookId && (
+                      <div style={{
+                        position: 'absolute', zIndex: 10, left: 0, right: 0,
+                        border: '1.5px solid #E4E9F7', borderRadius: '10px', background: '#FFFFFF',
+                        maxHeight: '120px', overflowY: 'auto', marginTop: '0.25rem',
+                        boxShadow: '0 4px 12px rgba(30,27,75,0.1)', display: 'flex', flexDirection: 'column'
+                      }}>
+                        {loadingBooks ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.75rem', fontSize: '0.78rem', color: '#9CA3AF' }}>
+                            <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} />
+                            <span>Searching…</span>
+                          </div>
+                        ) : (
+                          <>
+                            {books.map(b => (
+                              <button key={b.id} type="button" onClick={() => {
+                                setFormData({
+                                  ...formData,
+                                  bookId: b.id,
+                                  bookTitle: b.title,
+                                });
+                              }} style={{
+                                padding: '0.5rem 0.75rem', textAlign: 'left', border: 'none',
+                                background: 'none', cursor: 'pointer', fontSize: '0.78rem',
+                                color: '#1E1B4B', borderBottom: '1px solid #F1F4FA', transition: 'background 0.15s'
+                              }} onMouseEnter={e => e.currentTarget.style.background = '#F8FAFF'}
+                                 onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                                {b.title} {b.available_copies === 0 ? '(Out of stock)' : `(${b.available_copies} available)`}
+                              </button>
+                            ))}
+                            {books.length === 0 && (
+                              <span style={{ padding: '0.5rem 0.75rem', fontSize: '0.78rem', color: '#9CA3AF', fontStyle: 'italic' }}>New book title (will be entered manually)</span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -571,8 +646,51 @@ export default function BorrowManagement() {
                 <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#4B5563', display: 'block', marginBottom: '0.375rem' }}>Borrower Name *</label>
                 <div style={{ position: 'relative' }}>
                   <User size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
-                  <input type="text" required value={formData.borrowerName} onChange={e => setFormData({ ...formData, borrowerName: e.target.value })}
+                  <input type="text" required value={formData.borrowerName}
+                    onChange={e => {
+                      setFormData({ ...formData, borrowerName: e.target.value });
+                      setSelectedUserId('');
+                    }}
                     style={{ ...inputStyle, paddingLeft: '2rem' }} onFocus={focusInput} onBlur={blurInput} placeholder="e.g. Jane Doe" />
+
+                  {/* Users suggestions list */}
+                  {formData.borrowerName.trim() !== '' && !selectedUserId && (
+                    <div style={{
+                      position: 'absolute', zIndex: 10, left: 0, right: 0,
+                      border: '1.5px solid #E4E9F7', borderRadius: '10px', background: '#FFFFFF',
+                      maxHeight: '120px', overflowY: 'auto', marginTop: '0.25rem',
+                      boxShadow: '0 4px 12px rgba(30,27,75,0.1)', display: 'flex', flexDirection: 'column'
+                    }}>
+                      {loadingUsers ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.75rem', fontSize: '0.78rem', color: '#9CA3AF' }}>
+                          <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} />
+                          <span>Searching…</span>
+                        </div>
+                      ) : (
+                        <>
+                          {users.map(u => (
+                            <button key={u.id} type="button" onClick={() => {
+                              setFormData({
+                                ...formData,
+                                borrowerName: u.username,
+                              });
+                              setSelectedUserId(u.id);
+                            }} style={{
+                              padding: '0.5rem 0.75rem', textAlign: 'left', border: 'none',
+                              background: 'none', cursor: 'pointer', fontSize: '0.78rem',
+                              color: '#1E1B4B', borderBottom: '1px solid #F1F4FA', transition: 'background 0.15s'
+                            }} onMouseEnter={e => e.currentTarget.style.background = '#F8FAFF'}
+                               onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                              {u.username} ({u.email})
+                            </button>
+                          ))}
+                          {users.length === 0 && (
+                            <span style={{ padding: '0.5rem 0.75rem', fontSize: '0.78rem', color: '#9CA3AF', fontStyle: 'italic' }}>New borrower (will be entered manually)</span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 

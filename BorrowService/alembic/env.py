@@ -21,10 +21,7 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 from src.models.base import BaseModel
-from src.models.user import UserModel
-from src.models.permission import PermissionModel
-from src.models.role import RoleModel
-from src.models.role_permission import RolePermissionModel
+from src.models.borrow_record import Borrow_Record_model
 
 target_metadata = BaseModel.metadata
 # other values from the config, defined by the needs of env.py,
@@ -51,7 +48,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        version_table_schema="auth_service",
+        version_table_schema="borrow_service",
     )
 
     with context.begin_transaction():
@@ -72,12 +69,12 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        connection.execute(text("CREATE SCHEMA IF NOT EXISTS auth_service"))
+        connection.execute(text("CREATE SCHEMA IF NOT EXISTS borrow_service"))
         connection.commit()
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            version_table_schema="auth_service",
+            version_table_schema="borrow_service",
         )
 
         with context.begin_transaction():

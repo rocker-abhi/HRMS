@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     JWT_ACCESS_TOKEN_EXPIRE_TIME: int
     JWT_REFRESH_TOKEN_EXPIRE_TIME: int
 
+    MINIMUM_LOGGIN_LEVEL: str = "INFO"
+
     class Config:
         env_file = ".env"
 

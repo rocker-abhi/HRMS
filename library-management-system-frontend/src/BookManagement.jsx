@@ -4,6 +4,7 @@ import {
   CheckCircle2, AlertTriangle, BookMarked, Loader2
 } from 'lucide-react';
 
+
 /* ─── Shared Styles ──────────────────────────────────────────────────────── */
 const inputStyle = {
   width: '100%', paddingLeft: '2.375rem', paddingRight: '1rem',
@@ -70,12 +71,18 @@ export default function BookManagement() {
     title: '', isbn: '', description: '',
     total_copies: 1, available_copies: 1,
     published_date: '',
+    category_id: '',
+    author_ids: [],
   });
   const [submitting,     setSubmitting]    = useState(false);
   const [formError,      setFormError]     = useState('');
   const [toasts,         setToasts]        = useState([]);
   const [searchTerm,     setSearchTerm]    = useState('');
   const [filterAvail,    setFilterAvail]   = useState('ALL');
+  const [allAuthors,     setAllAuthors]    = useState([]);
+  const [authorSearch,   setAuthorSearch]  = useState('');
+  const [allCategories,  setAllCategories]  = useState([]);
+  const [searchedAuthors, setSearchedAuthors] = useState([]);
 
   const token   = localStorage.getItem('access_token');
   const role    = localStorage.getItem('role') || 'User';
@@ -108,11 +115,75 @@ export default function BookManagement() {
     }
   }, [token]);
 
-  useEffect(() => { fetchBooks(); }, [fetchBooks]);
+  const fetchAllAuthors = useCallback(async () => {
+    try {
+      const res = await fetch(`http://localhost:9000/authors`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setAllAuthors(data.data || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch authors", err);
+    }
+  }, [token]);
+
+  const fetchAllCategories = useCallback(async () => {
+    try {
+      const res = await fetch(`${BOOK_SERVICE_URL}/categories`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setAllCategories(data.data || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch categories", err);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    fetchBooks();
+    fetchAllAuthors();
+    fetchAllCategories();
+  }, [fetchBooks, fetchAllAuthors, fetchAllCategories]);
+
+  useEffect(() => {
+    if (!authorSearch.trim()) {
+      setSearchedAuthors([]);
+      return;
+    }
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const res = await fetch(`http://localhost:9000/authors/search?q=${encodeURIComponent(authorSearch)}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setSearchedAuthors(data.data || []);
+          if (data.data) {
+            // Ensure newly discovered authors are appended to allAuthors
+            // so we can resolve their names in the selected tag badges.
+            setAllAuthors(prev => {
+              const existingIds = new Set(prev.map(a => a.id));
+              const newAuthors = data.data.filter(a => !existingIds.has(a.id));
+              return [...prev, ...newAuthors];
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to search authors", err);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [authorSearch, token]);
 
   /* ── Modal helpers ─────────────────────────────────────────────────────── */
   const handleOpenModal = (book = null) => {
     setFormError('');
+    setAuthorSearch('');
     if (book) {
       setEditingBook(book);
       setFormData({
@@ -122,15 +193,26 @@ export default function BookManagement() {
         total_copies:     book.total_copies,
         available_copies: book.available_copies,
         published_date:   book.published_date || '',
+        category_id:      book.category?.id || '',
+        author_ids:       book.authors ? book.authors.map(a => a.id) : [],
       });
     } else {
       setEditingBook(null);
-      setFormData({ title: '', isbn: '', description: '', total_copies: 1, available_copies: 1, published_date: '' });
+      setFormData({
+        title: '',
+        isbn: '',
+        description: '',
+        total_copies: 1,
+        available_copies: 1,
+        published_date: '',
+        category_id: '',
+        author_ids: [],
+      });
     }
     setIsModalOpen(true);
   };
 
-  const handleCloseModal = () => { setIsModalOpen(false); setEditingBook(null); };
+  const handleCloseModal = () => { setIsModalOpen(false); setEditingBook(null); setAuthorSearch(''); };
 
   /* ── Save (create / update) ────────────────────────────────────────────── */
   const handleSave = async (e) => {
@@ -158,6 +240,8 @@ export default function BookManagement() {
         total_copies:     Number(formData.total_copies),
         available_copies: Number(formData.available_copies),
         published_date:   formData.published_date || null,
+        category_id:      formData.category_id || null,
+        author_ids:       formData.author_ids || [],
       };
 
       const res  = await fetch(url, {
@@ -226,7 +310,7 @@ export default function BookManagement() {
           <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#1E1B4B' }}>Book Catalog</h2>
           <p style={{ margin: '0.25rem 0 0', fontSize: '0.82rem', color: '#9CA3AF' }}>Manage library books, catalog details, and availability.</p>
         </div>
-        {isAdmin && (
+        {(
           <button onClick={() => handleOpenModal()}
             style={{
               display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1.125rem',
@@ -303,7 +387,7 @@ export default function BookManagement() {
                   <th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Category</th>
                   <th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Authors</th>
                   <th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Availability</th>
-                  {isAdmin && <th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Actions</th>}
+                  {<th style={{ padding: '1rem 1.5rem', fontSize: '0.75rem', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -353,7 +437,7 @@ export default function BookManagement() {
                     <td style={{ padding: '1rem 1.5rem' }}>
                       <AvailabilityBadge available={book.available_copies} total={book.total_copies} />
                     </td>
-                    {isAdmin && (
+                    {(
                       <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
                         <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
                           <button onClick={() => handleOpenModal(book)} title="Edit Book"
@@ -436,6 +520,88 @@ export default function BookManagement() {
                     style={{ ...inputStyle, paddingLeft: '0.875rem' }} onFocus={focusInput} onBlur={blurInput} />
                 </div>
               </div>
+
+              {/* Category & Authors */}
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#4B5563', display: 'block', marginBottom: '0.375rem' }}>Category</label>
+                  <div style={{ position: 'relative' }}>
+                    <select value={formData.category_id} onChange={e => setFormData({ ...formData, category_id: e.target.value })}
+                      style={{ ...inputStyle, paddingLeft: '0.875rem', paddingRight: '2rem', appearance: 'none', cursor: 'pointer' }}
+                      onFocus={focusInput} onBlur={blurInput}>
+                      <option value="">Select Category...</option>
+                      {allCategories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={14} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF', pointerEvents: 'none' }} />
+                  </div>
+                </div>
+                
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#4B5563', display: 'block', marginBottom: '0.375rem' }}>Author Name</label>
+                  <div style={{ position: 'relative' }}>
+                    <Search size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
+                    <input type="text" placeholder="Search author..." value={authorSearch} onChange={e => setAuthorSearch(e.target.value)}
+                      style={{ ...inputStyle, paddingLeft: '2rem' }} onFocus={focusInput} onBlur={blurInput} />
+                  </div>
+
+                  {/* Suggestions list */}
+                  {authorSearch.trim() !== '' && (
+                    <div style={{
+                      position: 'absolute', zIndex: 10, left: 0, right: 0,
+                      border: '1.5px solid #E4E9F7', borderRadius: '10px', background: '#FFFFFF',
+                      maxHeight: '120px', overflowY: 'auto', marginTop: '0.25rem',
+                      boxShadow: '0 4px 12px rgba(30,27,75,0.1)', display: 'flex', flexDirection: 'column'
+                    }}>
+                      {searchedAuthors
+                        .filter(a => !formData.author_ids.includes(a.id))
+                        .map(author => (
+                          <button key={author.id} type="button" onClick={() => {
+                            setFormData({
+                              ...formData,
+                              author_ids: [...formData.author_ids, author.id]
+                            });
+                            setAuthorSearch('');
+                          }} style={{
+                            padding: '0.5rem 0.75rem', textAlign: 'left', border: 'none',
+                            background: 'none', cursor: 'pointer', fontSize: '0.78rem',
+                            color: '#1E1B4B', borderBottom: '1px solid #F1F4FA', transition: 'background 0.15s'
+                          }} onMouseEnter={e => e.currentTarget.style.background = '#F8FAFF'}
+                             onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                            {author.first_name} {author.last_name}
+                          </button>
+                        ))}
+                      {searchedAuthors.filter(a => !formData.author_ids.includes(a.id)).length === 0 && (
+                        <span style={{ padding: '0.5rem 0.75rem', fontSize: '0.78rem', color: '#9CA3AF', fontStyle: 'italic' }}>No matching authors</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Selected Authors list */}
+              {formData.author_ids.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginTop: '0.125rem' }}>
+                  {formData.author_ids.map(authorId => {
+                    const author = allAuthors.find(a => a.id === authorId);
+                    if (!author) return null;
+                    return (
+                      <div key={authorId} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.25rem 0.5rem', borderRadius: '6px', background: 'rgba(79,70,229,0.08)', color: '#4F46E5', fontSize: '0.75rem', fontWeight: 600 }}>
+                        <span>{author.first_name} {author.last_name}</span>
+                        <button type="button" onClick={() => {
+                          setFormData({
+                            ...formData,
+                            author_ids: formData.author_ids.filter(id => id !== authorId)
+                          });
+                        }} style={{ border: 'none', background: 'none', color: '#4F46E5', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}>
+                          <X size={12} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Copies */}
               <div style={{ display: 'flex', gap: '0.75rem' }}>

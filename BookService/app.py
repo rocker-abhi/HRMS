@@ -2,7 +2,8 @@ from fastapi import FastAPI
 import uvicorn
 from dotenv import load_dotenv
 load_dotenv()
-from src.route import author_router, books_router
+# pyrefly: ignore [missing-import]
+from src.route import author_router, books_router, category_router
 
 # pyrefly: ignore [missing-import]
 from src.extensions.configurations import settings
@@ -70,6 +71,7 @@ def init_app():
     )
     app.include_router(author_router)
     app.include_router(books_router)
+    app.include_router(category_router)
     app.add_middleware(RequestContextMiddleware)
     app.add_exception_handler(ApplicationException, app_exception_handler)
     app.add_exception_handler(Exception, generic_exception_handler)

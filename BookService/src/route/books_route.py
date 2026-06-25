@@ -100,3 +100,5 @@ async def delete_book(
 
     service = BookService(db)
     return await service.delete_book(book_id)
+
+

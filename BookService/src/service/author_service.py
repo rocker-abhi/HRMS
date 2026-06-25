@@ -27,6 +27,14 @@ class AuthorService:
             "data": authors
         }
 
+    async def search_authors(self, query: str):
+        authors = self.repo.search_authors(query)
+        return {
+            "success": True,
+            "message": "Authors searched successfully.",
+            "data": authors
+        }
+
     async def get_author_by_id(self, author_id: UUID):
         author = self.repo.get_author_by_id(author_id)
         if not author:

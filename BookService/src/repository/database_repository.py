@@ -41,6 +41,21 @@ class AuthorRepository:
             logger.error(f"Error getting all authors: {e}")
             raise ApplicationException(ERRORS["DB_ERROR_001"])
 
+    def search_authors(self, query: str) -> list[AuthorModel]:
+        try:
+            search_pattern = f"%{query}%"
+            return (
+                self.db.query(AuthorModel)
+                .filter(
+                    (AuthorModel.first_name.ilike(search_pattern)) |
+                    (AuthorModel.last_name.ilike(search_pattern))
+                )
+                .all()
+            )
+        except Exception as e:
+            logger.error(f"Error searching authors: {e}")
+            raise ApplicationException(ERRORS["DB_ERROR_001"])
+
     def create_author(self, author: AuthorModel) -> AuthorModel:
         try:
             self.db.add(author)

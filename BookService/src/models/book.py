@@ -4,6 +4,7 @@ from uuid import UUID
 from sqlalchemy import Date, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+# pyrefly: ignore [missing-import]
 from src.models.base import BaseModel
 
 

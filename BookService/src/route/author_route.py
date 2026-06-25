@@ -36,6 +36,15 @@ async def get_all_authors(request: Request, db: Session = Depends(get_db)):
     return result
 
 
+@author_router.get("/search", response_model=AuthorListResponse)
+@jwt_required
+async def search_authors(request: Request, q: str = "", db: Session = Depends(get_db)):
+    """Search authors by first or last name."""
+    service = AuthorService(db)
+    result = await service.search_authors(q)
+    return result
+
+
 @author_router.get("/{author_id}", response_model=AuthorSingleResponse)
 @jwt_required
 async def get_author_by_id(request: Request, author_id: UUID, db: Session = Depends(get_db)):

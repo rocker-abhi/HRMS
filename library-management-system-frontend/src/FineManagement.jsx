@@ -49,6 +49,7 @@ export default function FineManagement() {
   const [fetchError,  setFetchError]  = useState('');
   const [searchTerm,  setSearchTerm]  = useState('');
   const [filterType,  setFilterType]  = useState('ALL'); // ALL, OUTSTANDING, RESOLVED
+  const [userMap,     setUserMap]     = useState({});
   const [toasts,      setToasts]      = useState([]);
   const [actionId,    setActionId]    = useState(null); // Tracks active operation row id
 
@@ -59,6 +60,24 @@ export default function FineManagement() {
     setToasts(t => [...t, { id, message, type }]);
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 4000);
   }, []);
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      const res = await fetch('http://localhost:8000/users', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const mapping = {};
+        (data.data || []).forEach(u => {
+          mapping[u.id] = u.username;
+        });
+        setUserMap(mapping);
+      }
+    } catch (err) {
+      console.error("Failed to load users", err);
+    }
+  }, [token]);
 
   const fetchFines = useCallback(async () => {
     setLoading(true);
@@ -86,9 +105,10 @@ export default function FineManagement() {
 
   useEffect(() => {
     if (token) {
+      fetchUsers();
       fetchFines();
     }
-  }, [token, fetchFines]);
+  }, [token, fetchUsers, fetchFines]);
 
   // Outstanding/Resolved classification:
   // - Resolved: Returned books where any fine has been cleared/paid OR return date is set and fine is 0
@@ -114,7 +134,8 @@ export default function FineManagement() {
   // Filter & Search records:
   const filteredRecords = useMemo(() => {
     return classifiedRecords.filter(r => {
-      const matchesSearch = r.borrower_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      const bName = userMap[r.borrower_id] || r.borrower_id || '';
+      const matchesSearch = bName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             r.book_title.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesFilter = filterType === 'ALL' ||
@@ -124,7 +145,7 @@ export default function FineManagement() {
 
       return matchesSearch && matchesFilter;
     });
-  }, [classifiedRecords, searchTerm, filterType]);
+  }, [classifiedRecords, searchTerm, filterType, userMap]);
 
   // Stats calculation:
   const stats = useMemo(() => {
@@ -143,7 +164,8 @@ export default function FineManagement() {
 
   // Waive fine action (updates due date to match return_date/today's date to clear fine dynamically)
   const handleWaiveFine = async (record) => {
-    if (!window.confirm(`Are you sure you want to waive the fine of ₹${record.fine} for "${record.borrower_name}"?`)) return;
+    const bName = userMap[record.borrower_id] || record.borrower_id || 'Borrower';
+    if (!window.confirm(`Are you sure you want to waive the fine of ₹${record.fine} for "${bName}"?`)) return;
     
     setActionId(record.id);
     try {
@@ -164,7 +186,7 @@ export default function FineManagement() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to waive fine.');
 
-      addToast(`Fine for ${record.borrower_name} successfully waived!`, 'success');
+      addToast(`Fine for ${bName} successfully waived!`, 'success');
       fetchFines();
     } catch (err) {
       addToast(err.message || 'Error waiving fine.', 'error');
@@ -175,7 +197,8 @@ export default function FineManagement() {
 
   // Pay/Clear Fine action (simply sets status to Returned and makes fine 0 by setting due_date = return_date)
   const handlePayFine = async (record) => {
-    if (!window.confirm(`Mark fine of ₹${record.fine} as PAID for "${record.borrower_name}"?`)) return;
+    const bName = userMap[record.borrower_id] || record.borrower_id || 'Borrower';
+    if (!window.confirm(`Mark fine of ₹${record.fine} as PAID for "${bName}"?`)) return;
     
     setActionId(record.id);
     try {
@@ -343,7 +366,7 @@ export default function FineManagement() {
                             <User size={15} />
                           </div>
                           <div>
-                            <div style={{ fontWeight: 600, color: '#1E1B4B' }}>{record.borrower_name}</div>
+                            <div style={{ fontWeight: 600, color: '#1E1B4B' }}>{userMap[record.borrower_id] || record.borrower_id || 'Unknown User'}</div>
                           </div>
                         </div>
                       </td>

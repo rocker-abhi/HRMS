@@ -36,7 +36,39 @@ services:
       - JWT_ALGORITHM=HS256
       - JWT_ACCESS_TOKEN_EXPIRE_TIME=300
       - JWT_REFRESH_TOKEN_EXPIRE_TIME=604800
+      - GRPC_HOST=0.0.0.0
+      - GRPC_PORT=5100
     restart: always
+
+  auth-grpc-service:
+    build:
+      context: ./AuthService
+      dockerfile: Dockerfile
+    container_name: hrms-auth-grpc-service
+    command: ["python", "src/grpc/server.py"]
+    ports:
+      - "5100:5100"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_PASSWORD=admin@123
+      - DATABASE_URL=postgresql+psycopg2://abhishek:admin%40123@host.docker.internal:5432/hrms_db
+      - SECRET_KEY=my-secret-key
+      - DEBUG=True
+      - MINIMUM_LOGGIN_LEVEL=DEBUG
+      - JWT_SECREAT_KEY=hashMyPassword
+      - JWT_ALGORITHM=HS256
+      - JWT_ACCESS_TOKEN_EXPIRE_TIME=300
+      - JWT_REFRESH_TOKEN_EXPIRE_TIME=604800
+      - GRPC_HOST=0.0.0.0
+      - GRPC_PORT=5100
+    restart: always
+
 
   book-service:
     build:
@@ -56,7 +88,35 @@ services:
       - JWT_ALGORITHM=HS256
       - JWT_ACCESS_TOKEN_EXPIRE_TIME=300
       - JWT_REFRESH_TOKEN_EXPIRE_TIME=604800
+      - AUTH_GRPC_HOST=auth-grpc-service
+      - AUTH_GRPC_PORT=5100
     restart: always
+
+  book-grpc-service:
+    build:
+      context: ./BookService
+      dockerfile: Dockerfile
+    container_name: hrms-book-grpc-service
+    command: ["python", "src/grpc/server.py"]
+    ports:
+      - "10100:10100"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://abhishek:admin%40123@host.docker.internal:5432/hrms_db
+      - SECRET_KEY=my-secret-key
+      - DEBUG=True
+      - MINIMUM_LOGGIN_LEVEL=DEBUG
+      - JWT_SECREAT_KEY=hashMyPassword
+      - JWT_ALGORITHM=HS256
+      - JWT_ACCESS_TOKEN_EXPIRE_TIME=300
+      - JWT_REFRESH_TOKEN_EXPIRE_TIME=604800
+      - GRPC_HOST=0.0.0.0
+      - GRPC_PORT=10100
+      - AUTH_GRPC_HOST=auth-grpc-service
+      - AUTH_GRPC_PORT=5100
+    restart: always
+
 
   borrow-service:
     build:

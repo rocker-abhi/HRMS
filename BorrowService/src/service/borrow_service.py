@@ -30,7 +30,7 @@ class BorrowService:
         record = Borrow_Record_model(
             book_id=payload.book_id,
             book_title=payload.book_title.strip(),
-            borrower_name=payload.borrower_name.strip(),
+            borrower_id=payload.borrower_id,
             borrow_date=payload.borrow_date,
             due_date=payload.due_date,
             status="Active"
@@ -78,8 +78,8 @@ class BorrowService:
             raise ApplicationException(ERRORS["BORROW_ERROR_001"])
 
         # Update fields
-        if payload.borrower_name is not None:
-            record.borrower_name = payload.borrower_name.strip()
+        if payload.borrower_id is not None:
+            record.borrower_id = payload.borrower_id
         if payload.borrow_date is not None:
             record.borrow_date = payload.borrow_date
         if payload.due_date is not None:

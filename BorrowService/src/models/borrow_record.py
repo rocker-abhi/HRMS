@@ -16,7 +16,7 @@ class Borrow_Record_model(BaseModel):
 
     book_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
     book_title: Mapped[str] = mapped_column(String(255), nullable=False)
-    borrower_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    borrower_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
     borrow_date: Mapped[date] = mapped_column(Date, nullable=False)
     due_date: Mapped[date] = mapped_column(Date, nullable=False)
     return_date: Mapped[date | None] = mapped_column(Date, nullable=True)
@@ -25,4 +25,4 @@ class Borrow_Record_model(BaseModel):
     )
 
     def __repr__(self) -> str:
-        return f"<BorrowRecord {self.borrower_name} - {self.book_title}>"
+        return f"<BorrowRecord borrower_id={self.borrower_id} - {self.book_title}>"

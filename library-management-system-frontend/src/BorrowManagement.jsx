@@ -84,12 +84,14 @@ export default function BorrowManagement() {
   const [users,        setUsers]        = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [userMap,      setUserMap]      = useState({});
   const [isModalOpen,  setIsModalOpen]  = useState(false);
   const [editingTx,    setEditingTx]    = useState(null);
   const [formData,     setFormData]     = useState({
     bookId: '',
     bookTitle: '',
     borrowerName: '',
+    borrowerId: '',
     borrowDate: '',
     dueDate: '',
     status: 'Active',
@@ -107,6 +109,25 @@ export default function BorrowManagement() {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
   }, []);
 
+  /* ── Fetch and cache all users ── */
+  const fetchAllUsers = useCallback(async () => {
+    try {
+      const res = await fetch('http://localhost:8000/users', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const mapping = {};
+        (data.data || []).forEach(u => {
+          mapping[u.id] = u.username;
+        });
+        setUserMap(mapping);
+      }
+    } catch (err) {
+      console.error("Failed to load users list", err);
+    }
+  }, [token]);
+
   /* ── Load initial data ─────────────────────────────────────────────────── */
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -120,7 +141,7 @@ export default function BorrowManagement() {
             id: record.id,
             bookId: record.book_id,
             bookTitle: record.book_title,
-            borrowerName: record.borrower_name,
+            borrowerId: record.borrower_id,
             borrowDate: record.borrow_date,
             dueDate: record.due_date,
             returnDate: record.return_date || '',
@@ -140,12 +161,13 @@ export default function BorrowManagement() {
     };
 
     if (token) {
+      fetchAllUsers();
       fetchTransactions();
     } else {
       const saved = localStorage.getItem('borrow_transactions');
       if (saved) setTransactions(JSON.parse(saved));
     }
-  }, [token]);
+  }, [token, fetchAllUsers]);
 
   /* ── Search library books ──────────────────────────────────────────────── */
   useEffect(() => {
@@ -220,19 +242,20 @@ export default function BorrowManagement() {
       setFormData({
         bookId: tx.bookId || '',
         bookTitle: tx.bookTitle,
-        borrowerName: tx.borrowerName,
+        borrowerName: userMap[tx.borrowerId] || tx.borrowerId,
+        borrowerId: tx.borrowerId,
         borrowDate: tx.borrowDate,
         dueDate: tx.dueDate,
         status: tx.status,
       });
-      // Mock selected user ID if active transaction matches a username
-      setSelectedUserId('editing');
+      setSelectedUserId(tx.borrowerId);
     } else {
       setEditingTx(null);
       setFormData({
         bookId: '',
         bookTitle: '',
         borrowerName: '',
+        borrowerId: '',
         borrowDate: today,
         dueDate: twoWeeks,
         status: 'Active',
@@ -251,8 +274,8 @@ export default function BorrowManagement() {
   /* ── Save (create / update) ────────────────────────────────────────────── */
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!formData.borrowerName.trim()) {
-      setFormError('Borrower name is required.');
+    if (!selectedUserId) {
+      setFormError('Please select a registered user from the autocomplete suggestions.');
       return;
     }
     if (!editingTx && !formData.bookTitle.trim()) {
@@ -268,7 +291,7 @@ export default function BorrowManagement() {
         setFormError('');
         const returnDate = formData.status === 'Returned' ? (formData.returnDate || todayStr) : null;
         const payload = {
-          borrower_name: formData.borrowerName.trim(),
+          borrower_id: selectedUserId,
           borrow_date: formData.borrowDate,
           due_date: formData.dueDate,
           status: formData.status,
@@ -300,7 +323,7 @@ export default function BorrowManagement() {
           if (t.id === editingTx.id) {
             return {
               ...t,
-              borrowerName: record.borrower_name,
+              borrowerId: record.borrower_id,
               borrowDate: record.borrow_date,
               dueDate: record.due_date,
               status: record.status,
@@ -327,7 +350,7 @@ export default function BorrowManagement() {
         const payload = {
           book_id: formData.bookId || null,
           book_title: bookTitle,
-          borrower_name: formData.borrowerName.trim(),
+          borrower_id: selectedUserId,
           borrow_date: formData.borrowDate,
           due_date: formData.dueDate,
         };
@@ -357,7 +380,7 @@ export default function BorrowManagement() {
           id: record.id,
           bookId: record.book_id,
           bookTitle: record.book_title,
-          borrowerName: record.borrower_name,
+          borrowerId: record.borrower_id,
           borrowDate: record.borrow_date,
           dueDate: record.due_date,
           returnDate: record.return_date || '',
@@ -472,11 +495,12 @@ export default function BorrowManagement() {
   const filteredTransactions = useMemo(() => {
     return transactions.filter(t => {
       const q = searchTerm.toLowerCase();
-      const matchSearch = t.bookTitle.toLowerCase().includes(q) || t.borrowerName.toLowerCase().includes(q);
+      const bName = userMap[t.borrowerId] || t.borrowerId || '';
+      const matchSearch = t.bookTitle.toLowerCase().includes(q) || bName.toLowerCase().includes(q);
       const matchStatus = filterStatus === 'ALL' || t.status.toUpperCase() === filterStatus;
       return matchSearch && matchStatus;
     });
-  }, [transactions, searchTerm, filterStatus]);
+  }, [transactions, searchTerm, filterStatus, userMap]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -616,9 +640,9 @@ export default function BorrowManagement() {
                       <td style={{ padding: '1rem 1.5rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#F0F4FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4F46E5', fontSize: '0.7rem', fontWeight: 700 }}>
-                            {tx.borrowerName.charAt(0).toUpperCase()}
+                            {(userMap[tx.borrowerId] || 'U').charAt(0).toUpperCase()}
                           </div>
-                          <div style={{ fontSize: '0.85rem', color: '#4B5563', fontWeight: 500 }}>{tx.borrowerName}</div>
+                          <div style={{ fontSize: '0.85rem', color: '#4B5563', fontWeight: 500 }}>{userMap[tx.borrowerId] || tx.borrowerId || 'Unknown User'}</div>
                         </div>
                       </td>
 
@@ -814,7 +838,7 @@ export default function BorrowManagement() {
                             </button>
                           ))}
                           {users.length === 0 && (
-                            <span style={{ padding: '0.5rem 0.75rem', fontSize: '0.78rem', color: '#9CA3AF', fontStyle: 'italic' }}>New borrower (will be entered manually)</span>
+                            <span style={{ padding: '0.5rem 0.75rem', fontSize: '0.78rem', color: '#EF4444', fontStyle: 'italic', fontWeight: 500 }}>No matching registered user found.</span>
                           )}
                         </>
                       )}

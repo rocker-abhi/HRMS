@@ -10,12 +10,6 @@ class Settings(BaseSettings):
     JWT_ACCESS_TOKEN_EXPIRE_TIME: int
     JWT_REFRESH_TOKEN_EXPIRE_TIME: int
 
-    MINIMUM_LOGGIN_LEVEL: str = "INFO"
-
-    GRPC_HOST: str
-    GRPC_PORT: int
-
-
     class Config:
         env_file = ".env"
         extra = "ignore"

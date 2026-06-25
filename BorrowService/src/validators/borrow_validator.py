@@ -6,7 +6,7 @@ from datetime import date, datetime
 class BorrowCreateRequest(BaseModel):
     book_id: Optional[UUID] = None
     book_title: str = Field(..., min_length=1, max_length=255)
-    borrower_name: str = Field(..., min_length=1, max_length=255)
+    borrower_id: UUID
     borrow_date: date
     due_date: date
 
@@ -14,7 +14,7 @@ class BorrowRecordResponse(BaseModel):
     id: UUID
     book_id: Optional[UUID] = None
     book_title: str
-    borrower_name: str
+    borrower_id: UUID
     borrow_date: date
     due_date: date
     return_date: Optional[date] = None
@@ -36,7 +36,7 @@ class BorrowListResponse(BaseModel):
     data: list[BorrowRecordResponse]
 
 class BorrowUpdateRequest(BaseModel):
-    borrower_name: Optional[str] = Field(None, min_length=1, max_length=255)
+    borrower_id: Optional[UUID] = None
     borrow_date: Optional[date] = None
     due_date: Optional[date] = None
     status: Optional[str] = Field(None, min_length=1, max_length=50)

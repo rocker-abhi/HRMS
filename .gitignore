@@ -165,3 +165,7 @@ node_modules/
 **/dist/
 .eslintcache
 .local
+
+# gRPC Generated files
+**/generated/*_pb2.py
+**/generated/*_pb2_grpc.py

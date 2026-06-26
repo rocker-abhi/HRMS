@@ -11,8 +11,10 @@ from src.extensions.exception_handler_extensions import ApplicationException
 from src.exceptions.all_exceptions import ERRORS
 # pyrefly: ignore [missing-import]
 from src.models.borrow_record import Borrow_Record_model
-# pyrefly: ignore [missing-import]
 from src.validators.borrow_validator import BorrowCreateRequest, BorrowUpdateRequest
+# pyrefly: ignore [missing-import]
+from src.grpc.client.auth_grpc_client import AuthGrpcClient
+
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +41,13 @@ class BorrowService:
         created_record = self.repo.create_borrow_record(record)
         # Set default fine of 0.0 for a newly created borrow record
         created_record.fine = 0.0
+
+        client = AuthGrpcClient()
+        try:
+            created_record.borrower_name = client.get_username_by_user_id(str(created_record.borrower_id)) or "Unknown User"
+        finally:
+            client.close()
+
         return {
             "success": True,
             "message": "Book borrowed successfully.",
@@ -49,23 +58,31 @@ class BorrowService:
         records = self.repo.get_all_borrow_records()
         today = date.today()
 
-        for record in records:
-            fine = 0.0
-            if record.return_date:
-                if record.return_date > record.due_date:
-                    fine = float((record.return_date - record.due_date).days * 20.0)
-            else:
-                if today > record.due_date:
-                    fine = float((today - record.due_date).days * 20.0)
-                elif record.status == "Overdue":
-                    fine = 10.0
-            record.fine = fine
-            # print(record.borrower_id)
+        client = AuthGrpcClient()
+        try:
+            for record in records:
+                fine = 0.0
+                if record.return_date:
+                    if record.return_date > record.due_date:
+                        fine = float((record.return_date - record.due_date).days * 20.0)
+                else:
+                    if today > record.due_date:
+                        fine = float((today - record.due_date).days * 20.0)
+                    elif record.status == "Overdue":
+                        fine = 10.0
+                record.fine = fine
+                
+                # Fetch username using gRPC client
+                username = client.get_username_by_user_id(str(record.borrower_id))
+                record.borrower_name = username or "Unknown User"
+        finally:
+            client.close()
 
         return {
             "success": True,
             "data": records
         }
+
 
     async def update_borrow_record(self, record_id: UUID, payload: BorrowUpdateRequest):
         record = self.repo.get_borrow_record_by_id(record_id)
@@ -107,6 +124,12 @@ class BorrowService:
             elif record.status == "Overdue":
                 fine = 10.0
         record.fine = fine
+
+        client = AuthGrpcClient()
+        try:
+            record.borrower_name = client.get_username_by_user_id(str(record.borrower_id)) or "Unknown User"
+        finally:
+            client.close()
 
         return {
             "success": True,

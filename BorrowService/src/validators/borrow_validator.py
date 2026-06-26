@@ -15,7 +15,9 @@ class BorrowRecordResponse(BaseModel):
     book_id: Optional[UUID] = None
     book_title: str
     borrower_id: UUID
+    borrower_name: Optional[str] = None
     borrow_date: date
+
     due_date: date
     return_date: Optional[date] = None
     status: str

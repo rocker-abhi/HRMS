@@ -142,6 +142,7 @@ export default function BorrowManagement() {
             bookId: record.book_id,
             bookTitle: record.book_title,
             borrowerId: record.borrower_id,
+            borrowerName: record.borrower_name || '',
             borrowDate: record.borrow_date,
             dueDate: record.due_date,
             returnDate: record.return_date || '',
@@ -324,6 +325,7 @@ export default function BorrowManagement() {
             return {
               ...t,
               borrowerId: record.borrower_id,
+              borrowerName: record.borrower_name || '',
               borrowDate: record.borrow_date,
               dueDate: record.due_date,
               status: record.status,
@@ -381,6 +383,7 @@ export default function BorrowManagement() {
           bookId: record.book_id,
           bookTitle: record.book_title,
           borrowerId: record.borrower_id,
+          borrowerName: record.borrower_name || '',
           borrowDate: record.borrow_date,
           dueDate: record.due_date,
           returnDate: record.return_date || '',
@@ -495,7 +498,7 @@ export default function BorrowManagement() {
   const filteredTransactions = useMemo(() => {
     return transactions.filter(t => {
       const q = searchTerm.toLowerCase();
-      const bName = userMap[t.borrowerId] || t.borrowerId || '';
+      const bName = t.borrowerName || userMap[t.borrowerId] || t.borrowerId || '';
       const matchSearch = t.bookTitle.toLowerCase().includes(q) || bName.toLowerCase().includes(q);
       const matchStatus = filterStatus === 'ALL' || t.status.toUpperCase() === filterStatus;
       return matchSearch && matchStatus;
@@ -640,9 +643,9 @@ export default function BorrowManagement() {
                       <td style={{ padding: '1rem 1.5rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#F0F4FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4F46E5', fontSize: '0.7rem', fontWeight: 700 }}>
-                            {(userMap[tx.borrowerId] || 'U').charAt(0).toUpperCase()}
+                            {(tx.borrowerName || userMap[tx.borrowerId] || 'U').charAt(0).toUpperCase()}
                           </div>
-                          <div style={{ fontSize: '0.85rem', color: '#4B5563', fontWeight: 500 }}>{userMap[tx.borrowerId] || tx.borrowerId || 'Unknown User'}</div>
+                          <div style={{ fontSize: '0.85rem', color: '#4B5563', fontWeight: 500 }}>{tx.borrowerName || userMap[tx.borrowerId] || tx.borrowerId || 'Unknown User'}</div>
                         </div>
                       </td>
 
